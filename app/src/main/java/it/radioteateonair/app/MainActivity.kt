@@ -14,21 +14,28 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Create and display WebView
         webView = WebView(this)
         setContentView(webView)
 
-        // Apply padding to avoid overlap with navigation bar
+        // ✅ WebView settings
+        with(webView.settings) {
+            javaScriptEnabled = true
+            domStorageEnabled = true
+            mediaPlaybackRequiresUserGesture = false
+        }
+
+        // ✅ Apply padding to avoid overlap with system bars
         ViewCompat.setOnApplyWindowInsetsListener(webView) { view, insets ->
-            val navBarInsets = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
-            view.updatePadding(bottom = navBarInsets.bottom)
+            val systemInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.updatePadding(
+                top = systemInsets.top,
+                bottom = systemInsets.bottom
+            )
             insets
         }
 
-        // Set up WebView settings
+        // ✅ WebView load
         webView.webViewClient = WebViewClient()
-        webView.settings.javaScriptEnabled = true
-        webView.settings.domStorageEnabled = true
         webView.loadUrl("https://radioteateonair.it")
     }
 
