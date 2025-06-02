@@ -1,9 +1,13 @@
 package it.radioteateonair.app
 
 import android.os.Bundle
+import android.view.View
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 
 class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
@@ -14,8 +18,15 @@ class MainActivity : AppCompatActivity() {
         webView = WebView(this)
         setContentView(webView)
 
+        // Handle navigation bar insets
+        ViewCompat.setOnApplyWindowInsetsListener(webView) { view, insets ->
+            val navBarInsets = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            view.updatePadding(bottom = navBarInsets.bottom)
+            insets
+        }
+
         webView.webViewClient = WebViewClient()
-        true.also { webView.settings.javaScriptEnabled = it }
+        webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
         webView.loadUrl("https://radioteateonair.it")
     }
