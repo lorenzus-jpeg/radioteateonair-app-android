@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.webkit.WebView
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -18,8 +19,14 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var artistView: TextView
     private lateinit var songTitleView: TextView
-    private var isPlaying = false
     private lateinit var bars: List<BarView>
+    private var isPlaying = false
+
+    val fallbackImages = mapOf(
+        "METEO ON AIR" to "https://www.radioteateonair.it/wp-content/uploads/2023/07/copertina_meteo-400x400.png",
+        "PILLOLE DI ECONOMIA" to "https://www.radioteateonair.it/wp-content/uploads/2023/07/copertina_meteo-400x400.png"
+    )
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,21 +58,22 @@ class MainActivity : AppCompatActivity() {
         }
 
         startSongInfoUpdater()
+        loadFilteredWebPage()
     }
 
     private fun startSongInfoUpdater() {
-        val url = "https://nr14.newradio.it:8663/status-json.xsl"
+        val jsonUrl = "https://nr14.newradio.it:8663/status-json.xsl"
 
         val updateTask = object : Runnable {
             override fun run() {
                 executor.execute {
                     try {
-                        val response = URL(url).readText()
+                        val response = URL(jsonUrl).readText()
                         val json = JSONObject(response)
                         val fullTitle = json
                             .getJSONObject("icestats")
                             .getJSONObject("source")
-                            .getString("title")
+                            .getString("yp_currently_playing")
 
                         val parts = fullTitle.split(" - ", limit = 2)
                         val artist = parts.getOrNull(0)?.trim() ?: "Unknown Artist"
@@ -82,7 +90,7 @@ class MainActivity : AppCompatActivity() {
                             songTitleView.text = ""
                         }
                     } finally {
-                        handler.postDelayed(this, 20000) // refresh every 20 sec
+                        handler.postDelayed(this, 15000)
                     }
                 }
             }
@@ -90,4 +98,93 @@ class MainActivity : AppCompatActivity() {
 
         handler.post(updateTask)
     }
+
+    private fun loadFilteredWebPage() {
+        val webView = findViewById<WebView>(R.id.webView)
+        webView.settings.javaScriptEnabled = true
+        webView.settings.domStorageEnabled = true
+        webView.settings.loadsImagesAutomatically = true
+
+        val url = "https://www.radioteateonair.it/palinsesto/"
+
+        Thread {
+            try {
+                val doc = org.jsoup.Jsoup.connect(url).get()
+
+                doc.select("select#qwShowDropdown").remove()
+                doc.select("*:matchesOwn(^\\s*Scegli giorno\\s*\$)").forEach { it.remove() }
+
+                val element = doc.selectFirst("div.qt-show-schedule.qt-shows-schedule-refresh")
+
+                element?.select("img")?.forEach { img ->
+                    val realSrc = img.absUrl("src").ifEmpty { img.absUrl("data-src") }
+                    img.attr("src", realSrc)
+                    img.removeAttr("data-src")
+                }
+
+                val fallbackImages = mapOf(
+                    "METEO ON AIR" to "https://yourdomain.it/fallbacks/meteo.png",
+                    "PILLOLE DI ECONOMIA" to "https://yourdomain.it/fallbacks/economia.png"
+                )
+
+                element?.select(".qt-header-bg")?.forEach { div ->
+                    val bgUrl = div.absUrl("data-bgimage")
+                    var finalUrl = bgUrl
+
+                    if (bgUrl.isEmpty()) {
+                        // Try to find fallback from adjacent .qt-ellipsis a
+                        val parent = div.parent()
+                        val fallbackKey = parent?.selectFirst(".qt-ellipsis a")?.text()?.trim()?.uppercase()
+                        if (fallbackKey != null && fallbackImages.containsKey(fallbackKey)) {
+                            finalUrl = fallbackImages[fallbackKey] ?: ""
+                        }
+                    }
+
+                    if (finalUrl.isNotEmpty()) {
+                        div.attr(
+                            "style", "background-image: url('$finalUrl'); " +
+                                    "background-size: cover; background-position: center; " +
+                                    "background-repeat: no-repeat; min-height: 180px;"
+                        )
+                    }
+                }
+
+                val content = element?.html() ?: "<p>Contenuto non disponibile</p>"
+
+                val cssLinks = doc.select("link[rel=stylesheet]").joinToString("\n") {
+                    """<link rel="stylesheet" href="${it.absUrl("href")}">"""
+                }
+
+                val cleanHtml = """
+                <html>
+                    <head>
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        $cssLinks
+                        <style>
+                            body { margin: 0; padding: 16px; font-family: sans-serif; background: #fff; color: #000; }
+                            img, iframe { max-width: 100%; height: auto; display: block; margin: 8px auto; }
+                            .qt-header-bg {
+                                min-height: 180px;
+                                background-size: cover !important;
+                                background-position: center !important;
+                                background-repeat: no-repeat !important;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        $content
+                    </body>
+                </html>
+            """.trimIndent()
+
+                runOnUiThread {
+                    webView.loadDataWithBaseURL(url, cleanHtml, "text/html", "UTF-8", null)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }.start()
+    }
+
+
 }
