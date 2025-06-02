@@ -1,18 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    android:background="#008000"
+    android:padding="32dp">
 
-    <TextView
+    <!-- 🎛 Vertically centered content -->
+    <LinearLayout
+        android:id="@+id/centerContent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:orientation="vertical"
+        android:layout_centerInParent="true"
+        android:gravity="center_horizontal">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <!-- 🎚 15 Equalizer Bars -->
+        <LinearLayout
+            android:id="@+id/eqLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="200dp"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <!-- 15 animated bars -->
+            <it.radioteateonair.app.BarView android:id="@+id/bar1" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
+            <it.radioteateonair.app.BarView android:id="@+id/bar2" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
+            <it.radioteateonair.app.BarView android:id="@+id/bar3" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
+            <it.radioteateonair.app.BarView android:id="@+id/bar4" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
+            <it.radioteateonair.app.BarView android:id="@+id/bar5" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
+            <it.radioteateonair.app.BarView android:id="@+id/bar6" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
+            <it.radioteateonair.app.BarView android:id="@+id/bar7" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
+            <it.radioteateonair.app.BarView android:id="@+id/bar8" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
+            <it.radioteateonair.app.BarView android:id="@+id/bar9" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
+            <it.radioteateonair.app.BarView android:id="@+id/bar10" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
+            <it.radioteateonair.app.BarView android:id="@+id/bar11" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
+            <it.radioteateonair.app.BarView android:id="@+id/bar12" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
+            <it.radioteateonair.app.BarView android:id="@+id/bar13" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
+            <it.radioteateonair.app.BarView android:id="@+id/bar14" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
+            <it.radioteateonair.app.BarView android:id="@+id/bar15" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
+        </LinearLayout>
+
+        <!-- 🎤 Artist -->
+        <TextView
+            android:id="@+id/artistName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Artist"
+            android:textSize="20sp"
+            android:textColor="#FFFFFF"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            android:textAlignment="center"
+            android:layout_gravity="center_horizontal"
+            android:fontFamily="sans-serif" />
+
+        <!-- 🎶 Song Title -->
+        <TextView
+            android:id="@+id/songTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Title"
+            android:textSize="18sp"
+            android:textColor="#FFFFFF"
+            android:layout_marginTop="4dp"
+            android:gravity="center"
+            android:textAlignment="center"
+            android:layout_gravity="center_horizontal"
+            android:fontFamily="sans-serif" />
+
+    </LinearLayout>
+
+    <!-- ▶️ Play Button -->
+    <Button
+        android:id="@+id/playButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Play Radio"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="24dp"
+        android:backgroundTint="#FFFFFF"
+        android:textColor="#008000"
+        android:fontFamily="sans-serif" />
+</RelativeLayout>
