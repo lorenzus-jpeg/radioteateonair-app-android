@@ -4,96 +4,111 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#008000"
-    android:padding="16dp">
+    android:padding="0dp">
 
-    <!-- Vertically centered content -->
-    <LinearLayout
-        android:id="@+id/centerContent"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="32dp"
-        android:gravity="center_horizontal">
-
-        <!-- Equalizer Bars -->
-        <LinearLayout
-            android:id="@+id/eqLayout"
-            android:layout_width="wrap_content"
-            android:layout_height="200dp"
-            android:orientation="horizontal"
-            android:gravity="center">
-
-            <!-- 15 animated bars -->
-            <it.radioteateonair.app.BarView android:id="@+id/bar1" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
-            <it.radioteateonair.app.BarView android:id="@+id/bar2" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
-            <it.radioteateonair.app.BarView android:id="@+id/bar3" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
-            <it.radioteateonair.app.BarView android:id="@+id/bar4" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
-            <it.radioteateonair.app.BarView android:id="@+id/bar5" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
-            <it.radioteateonair.app.BarView android:id="@+id/bar6" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
-            <it.radioteateonair.app.BarView android:id="@+id/bar7" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
-            <it.radioteateonair.app.BarView android:id="@+id/bar8" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
-            <it.radioteateonair.app.BarView android:id="@+id/bar9" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
-            <it.radioteateonair.app.BarView android:id="@+id/bar10" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
-            <it.radioteateonair.app.BarView android:id="@+id/bar11" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
-            <it.radioteateonair.app.BarView android:id="@+id/bar12" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
-            <it.radioteateonair.app.BarView android:id="@+id/bar13" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
-            <it.radioteateonair.app.BarView android:id="@+id/bar14" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
-            <it.radioteateonair.app.BarView android:id="@+id/bar15" android:layout_width="6dp" android:layout_height="match_parent" android:layout_margin="2dp"/>
-        </LinearLayout>
-
-        <!-- Artist -->
-        <TextView
-            android:id="@+id/artistName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Artist"
-            android:textSize="20sp"
-            android:textColor="#FFFFFF"
-            android:layout_marginTop="16dp"
-            android:gravity="center"
-            android:textAlignment="center"
-            android:layout_gravity="center_horizontal"
-            android:fontFamily="sans-serif" />
-
-        <!-- Song Title -->
-        <TextView
-            android:id="@+id/songTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Title"
-            android:textSize="18sp"
-            android:textColor="#FFFFFF"
-            android:layout_marginTop="4dp"
-            android:gravity="center"
-            android:textAlignment="center"
-            android:layout_gravity="center_horizontal"
-            android:fontFamily="sans-serif" />
-    </LinearLayout>
-
-    <!-- WebView -->
     <WebView
         android:id="@+id/webView"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_below="@+id/centerContent"
-        android:layout_above="@+id/playButton"
-        android:layout_marginTop="16dp"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentEnd="true"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/startButton"
+        android:layout_alignParentTop="true"
         android:overScrollMode="never"
-        android:background="#ffffff"/>
+        android:background="#ffffff" />
 
-    <!-- Play Button -->
-    <Button
-        android:id="@+id/playButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Play Radio"
-        android:layout_centerHorizontal="true"
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/startButton"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
         android:layout_alignParentBottom="true"
-        android:layout_marginBottom="16dp"
-        android:backgroundTint="#FFFFFF"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="36dp"
+        android:layout_marginTop="12dp"
+        android:text="▶"
         android:textColor="#008000"
+        android:textSize="28sp"
+        android:background="@drawable/round_black_button"
         android:fontFamily="sans-serif" />
+
+    <LinearLayout
+        android:id="@+id/bottomBar"
+        android:layout_width="match_parent"
+        android:layout_height="140dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="24dp"
+        android:orientation="horizontal"
+        android:background="#008000"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp"
+        android:gravity="center_vertical"
+        android:visibility="gone">
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/playButton"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:text="⏹"
+            android:textColor="#00FF00"
+            android:textSize="28sp"
+            android:background="@drawable/round_black_button"
+            android:fontFamily="sans-serif" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingHorizontal="12dp">
+
+            <TextView
+                android:id="@+id/songTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Title"
+                android:textSize="18sp"
+                android:textColor="#FFFFFF"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:textAlignment="center" />
+
+            <TextView
+                android:id="@+id/artistName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Artist"
+                android:textSize="16sp"
+                android:textColor="#EEEEEE"
+                android:fontFamily="sans-serif"
+                android:gravity="center"
+                android:textAlignment="center"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/eqLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="60dp"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <it.radioteateonair.app.BarView android:id="@+id/bar1" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
+            <it.radioteateonair.app.BarView android:id="@+id/bar2" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
+            <it.radioteateonair.app.BarView android:id="@+id/bar3" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
+            <it.radioteateonair.app.BarView android:id="@+id/bar4" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
+            <it.radioteateonair.app.BarView android:id="@+id/bar5" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
+            <it.radioteateonair.app.BarView android:id="@+id/bar6" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
+            <it.radioteateonair.app.BarView android:id="@+id/bar7" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
+            <it.radioteateonair.app.BarView android:id="@+id/bar8" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
+            <it.radioteateonair.app.BarView android:id="@+id/bar9" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
+            <it.radioteateonair.app.BarView android:id="@+id/bar10" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
+            <it.radioteateonair.app.BarView android:id="@+id/bar11" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
+            <it.radioteateonair.app.BarView android:id="@+id/bar12" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
+            <it.radioteateonair.app.BarView android:id="@+id/bar13" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
+            <it.radioteateonair.app.BarView android:id="@+id/bar14" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
+            <it.radioteateonair.app.BarView android:id="@+id/bar15" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
+        </LinearLayout>
+    </LinearLayout>
+
 </RelativeLayout>

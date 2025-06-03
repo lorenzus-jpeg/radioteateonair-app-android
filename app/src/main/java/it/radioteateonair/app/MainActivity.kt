@@ -4,10 +4,11 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.View
 import android.webkit.WebView
-import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.AppCompatButton
 import org.json.JSONObject
 import java.net.URL
 import java.util.concurrent.Executors
@@ -20,19 +21,19 @@ class MainActivity : AppCompatActivity() {
     private lateinit var artistView: TextView
     private lateinit var songTitleView: TextView
     private lateinit var bars: List<BarView>
+    private lateinit var playButton: AppCompatButton
+    private lateinit var startButton: AppCompatButton
+    private lateinit var bottomBar: View
+
     private var isPlaying = false
-
-    val fallbackImages = mapOf(
-        "METEO ON AIR" to "https://www.radioteateonair.it/wp-content/uploads/2023/07/copertina_meteo-400x400.png",
-        "PILLOLE DI ECONOMIA" to "https://www.radioteateonair.it/wp-content/uploads/2023/07/copertina_meteo-400x400.png"
-    )
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val playButton = findViewById<Button>(R.id.playButton)
+        startButton = findViewById(R.id.startButton)
+        playButton = findViewById(R.id.playButton)
+        bottomBar = findViewById(R.id.bottomBar)
         artistView = findViewById(R.id.artistName)
         songTitleView = findViewById(R.id.songTitle)
 
@@ -44,20 +45,67 @@ class MainActivity : AppCompatActivity() {
             findViewById(R.id.bar13), findViewById(R.id.bar14), findViewById(R.id.bar15)
         )
 
-        playButton.setOnClickListener {
-            if (!isPlaying) {
-                startService(Intent(this, RadioService::class.java))
-                bars.forEach { it.startAnimation() }
-                playButton.text = "Stop Radio"
-            } else {
-                stopService(Intent(this, RadioService::class.java))
-                bars.forEach { it.stopAnimation() }
-                playButton.text = "Play Radio"
-            }
-            isPlaying = !isPlaying
+        bottomBar.visibility = View.GONE
+
+        startButton.setOnClickListener {
+            startService(Intent(this, RadioService::class.java))
+            bars.forEach { it.startAnimation() }
+            isPlaying = true
+
+            // Animate start button to left and fade in bottom bar
+            startButton.animate()
+                .translationX(-resources.displayMetrics.widthPixels / 2f + 96f)
+                .scaleX(0.67f)
+                .scaleY(0.67f)
+                .setDuration(400)
+                .withEndAction {
+                    startButton.visibility = View.GONE
+                    bottomBar.visibility = View.VISIBLE
+                    playButton.text = "⏹"
+                }
+                .start()
+
+            startSongInfoUpdater()
         }
 
-        startSongInfoUpdater()
+        playButton.setOnClickListener {
+            if (isPlaying) {
+                stopService(Intent(this, RadioService::class.java))
+                bars.forEach { it.stopAnimation() }
+                isPlaying = false
+
+                // Prepare start button for animation before fading out bottomBar
+                startButton.apply {
+                    visibility = View.VISIBLE
+                    alpha = 0f
+                    scaleX = 0.67f
+                    scaleY = 0.67f
+                    translationX = -resources.displayMetrics.widthPixels / 2f + 96f
+                }
+
+                // Fade out bottomBar
+                bottomBar.animate()
+                    .alpha(0f)
+                    .setDuration(300)
+                    .withEndAction {
+                        bottomBar.visibility = View.GONE
+                        bottomBar.alpha = 1f
+
+                        // Animate startButton back to center
+                        startButton.animate()
+                            .translationX(0f)
+                            .scaleX(1f)
+                            .scaleY(1f)
+                            .alpha(1f)
+                            .setDuration(400)
+                            .start()
+                    }
+                    .start()
+            }
+        }
+
+
+
         loadFilteredWebPage()
     }
 
@@ -110,7 +158,6 @@ class MainActivity : AppCompatActivity() {
         Thread {
             try {
                 val doc = org.jsoup.Jsoup.connect(url).get()
-
                 doc.select("select#qwShowDropdown").remove()
                 doc.select("*:matchesOwn(^\\s*Scegli giorno\\s*\$)").forEach { it.remove() }
 
@@ -132,7 +179,6 @@ class MainActivity : AppCompatActivity() {
                     var finalUrl = bgUrl
 
                     if (bgUrl.isEmpty()) {
-                        // Try to find fallback from adjacent .qt-ellipsis a
                         val parent = div.parent()
                         val fallbackKey = parent?.selectFirst(".qt-ellipsis a")?.text()?.trim()?.uppercase()
                         if (fallbackKey != null && fallbackImages.containsKey(fallbackKey)) {
@@ -185,6 +231,4 @@ class MainActivity : AppCompatActivity() {
             }
         }.start()
     }
-
-
 }
