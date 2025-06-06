@@ -11,8 +11,8 @@ android {
         applicationId = "it.radioteateonair.app"
         minSdk = 33
         targetSdk = 35
-        versionCode = 3
-        versionName = "RTOA 3"
+        versionCode = 4
+        versionName = "RTOA 4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
