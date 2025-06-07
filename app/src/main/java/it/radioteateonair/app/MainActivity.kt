@@ -189,7 +189,8 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
-                // Ensure background images are applied
+                /// Ensure background images are applied
+
                 filteredDivs.forEach { div ->
                     div.select(".qt-header-bg").forEach { bgDiv ->
                         val bgUrl = bgDiv.attr("data-bgimage")
