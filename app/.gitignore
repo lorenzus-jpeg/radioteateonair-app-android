@@ -1,1 +1,17 @@
 /build
+/release
+
+# Ignore APKs
+*.apk
+*.aab
+/app/release/
+/app/debug/
+
+# Ignore keystore files
+*.jks
+*.keystore
+*.pem
+*.p12
+
+# Ignore local signing config
+local.properties
