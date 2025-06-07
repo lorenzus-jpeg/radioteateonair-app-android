@@ -1,13 +1,12 @@
-# RADIOTEATEONAIR
+# Radio Teate On Air
 
-**RADIOTEATEONAIR** è l'app ufficiale Android per ascoltare in diretta i contenuti di *Radio Teate On Air*. Sviluppata nativamente in Kotlin, l'app offre un'interfaccia fluida e reattiva per avviare lo streaming, visualizzare il palinsesto del giorno e ricevere aggiornamenti in tempo reale sul podcast o brano in riproduzione.
+**RADIO TEATE ON AIR** è l'app ufficiale Android per ascoltare in diretta i contenuti di *Radio Teate On Air*. Sviluppata nativamente in Kotlin, l'app offre un'interfaccia fluida e reattiva per avviare lo streaming, visualizzare il palinsesto del giorno e ricevere aggiornamenti in tempo reale sul podcast o brano in riproduzione.
 
-**Scaricala ora da Google Play:**  
-[RADIOTEATEONAIR su Google Play](https://play.google.com/store/apps/details?id=it.radioteateonair.app&hl=it)
+**Scaricala ora da Google Play:**  [Play Store](https://play.google.com/store/apps/details?id=it.radioteateonair.app&hl=it)
 
 ---
 
-## 📱 Funzionalità principali
+## Funzionalità principali
 
 - **Streaming audio live** tramite MediaPlayer, anche in background
 - **Visualizzazione del palinsesto** filtrato per giorno della settimana
@@ -17,7 +16,7 @@
 
 ---
 
-## 🛠️ Stack Tecnologico
+## Stack Tecnologico
 
 - **Linguaggio:** Kotlin
 - **Interfaccia UI:** ConstraintLayout, WebView, Custom Views
@@ -26,11 +25,4 @@
 - **Animazioni:** `ValueAnimator` per barre audio reattive
 
 ---
-
-## 🚀 Installazione
-
-Per compilare e avviare localmente:
-
-```bash
-git clone https://github.com/tuonomeutente/RADIOTEATEONAIR.git
 
