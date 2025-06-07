@@ -11,10 +11,11 @@ android {
         applicationId = "it.radioteateonair.app"
         minSdk = 33
         targetSdk = 35
-        versionCode = 4
-        versionName = "RTOA 4"
+        versionCode = 5
+        versionName = "RTOA 5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables.useSupportLibrary = true
     }
 
     buildTypes {

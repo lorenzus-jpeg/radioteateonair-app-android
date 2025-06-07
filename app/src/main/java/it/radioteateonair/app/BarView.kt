@@ -1,40 +1,33 @@
 package it.radioteateonair.app
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.View
-import android.view.animation.LinearInterpolator
-import android.animation.ValueAnimator
 
 class BarView @JvmOverloads constructor(
-    context: Context, attrs: AttributeSet? = null
+    context: Context,
+    attrs: AttributeSet? = null
 ) : View(context, attrs) {
 
     private val paint = Paint().apply {
-        color = Color.WHITE
+        color = 0xFFFFFFFF.toInt() // white
+        style = Paint.Style.FILL
     }
 
-    private var barHeight: Float = 0f
+    private var barHeight = 0
     private var animator: ValueAnimator? = null
 
-    override fun onDraw(canvas: Canvas) {
-        super.onDraw(canvas)
-        val centerX = width / 2f
-        val topY = height - barHeight
-        canvas.drawRect(centerX - 5, topY, centerX + 5, height.toFloat(), paint)
-    }
-
     fun startAnimation() {
-        animator = ValueAnimator.ofFloat(20f, height.toFloat()).apply {
-            duration = (800..1200).random().toLong() // ⏳ slower animation
+        stopAnimation()
+        animator = ValueAnimator.ofInt(10, height).apply {
+            duration = 800L // slower animation
             repeatCount = ValueAnimator.INFINITE
             repeatMode = ValueAnimator.REVERSE
-            interpolator = LinearInterpolator()
             addUpdateListener {
-                barHeight = it.animatedValue as Float
+                barHeight = it.animatedValue as Int
                 invalidate()
             }
             start()
@@ -43,7 +36,16 @@ class BarView @JvmOverloads constructor(
 
     fun stopAnimation() {
         animator?.cancel()
-        barHeight = 0f
+        barHeight = 0
         invalidate()
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+        val left = 0f
+        val right = width.toFloat()
+        val top = height - barHeight.toFloat()
+        val bottom = height.toFloat()
+        canvas.drawRect(left, top, right, bottom, paint)
     }
 }

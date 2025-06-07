@@ -4,13 +4,17 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.text.TextUtils
 import android.view.View
 import android.webkit.WebView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
+import androidx.appcompat.widget.AppCompatImageButton
 import org.json.JSONObject
+import org.jsoup.Jsoup
 import java.net.URL
+import java.util.*
 import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
@@ -21,9 +25,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var artistView: TextView
     private lateinit var songTitleView: TextView
     private lateinit var bars: List<BarView>
-    private lateinit var playButton: AppCompatButton
+    private lateinit var playButton: AppCompatImageButton
     private lateinit var startButton: AppCompatButton
     private lateinit var bottomBar: View
+    private lateinit var logoText: TextView
 
     private var isPlaying = false
 
@@ -36,6 +41,7 @@ class MainActivity : AppCompatActivity() {
         bottomBar = findViewById(R.id.bottomBar)
         artistView = findViewById(R.id.artistName)
         songTitleView = findViewById(R.id.songTitle)
+        logoText = findViewById(R.id.logoText)
 
         bars = listOf(
             findViewById(R.id.bar1), findViewById(R.id.bar2), findViewById(R.id.bar3),
@@ -47,12 +53,31 @@ class MainActivity : AppCompatActivity() {
 
         bottomBar.visibility = View.GONE
 
+        // Marquee strings
+        val messages = listOf(
+            "Benvenuti nell'app ufficiale di Radio Teate On Air",
+            "Ascolta la diretta!",
+            "Visita il sito radioteateonair.it",
+            "Seguici su Instagram @radioteateonair",
+            "Ascolta Soundcheck, la nostra nuova rubrica!"
+        )
+        val repeated = messages.joinToString("     •     ") + "     •     "
+        val fullMarquee = repeated.repeat(10)
+        logoText.text = fullMarquee
+        logoText.setSingleLine(true)
+        logoText.ellipsize = TextUtils.TruncateAt.MARQUEE
+        logoText.marqueeRepeatLimit = -1
+        logoText.setHorizontallyScrolling(true)
+        logoText.isFocusable = true
+        logoText.isFocusableInTouchMode = true
+        logoText.requestFocus()
+        logoText.isSelected = true
+
         startButton.setOnClickListener {
             startService(Intent(this, RadioService::class.java))
             bars.forEach { it.startAnimation() }
             isPlaying = true
 
-            // Animate start button to left and fade in bottom bar
             startButton.animate()
                 .translationX(-resources.displayMetrics.widthPixels / 2f + 96f)
                 .scaleX(0.67f)
@@ -61,7 +86,6 @@ class MainActivity : AppCompatActivity() {
                 .withEndAction {
                     startButton.visibility = View.GONE
                     bottomBar.visibility = View.VISIBLE
-                    playButton.text = "⏹"
                 }
                 .start()
 
@@ -74,7 +98,6 @@ class MainActivity : AppCompatActivity() {
                 bars.forEach { it.stopAnimation() }
                 isPlaying = false
 
-                // Prepare start button for animation before fading out bottomBar
                 startButton.apply {
                     visibility = View.VISIBLE
                     alpha = 0f
@@ -83,15 +106,12 @@ class MainActivity : AppCompatActivity() {
                     translationX = -resources.displayMetrics.widthPixels / 2f + 96f
                 }
 
-                // Fade out bottomBar
                 bottomBar.animate()
                     .alpha(0f)
                     .setDuration(300)
                     .withEndAction {
                         bottomBar.visibility = View.GONE
                         bottomBar.alpha = 1f
-
-                        // Animate startButton back to center
                         startButton.animate()
                             .translationX(0f)
                             .scaleX(1f)
@@ -103,8 +123,6 @@ class MainActivity : AppCompatActivity() {
                     .start()
             }
         }
-
-
 
         loadFilteredWebPage()
     }
@@ -157,75 +175,65 @@ class MainActivity : AppCompatActivity() {
 
         Thread {
             try {
-                val doc = org.jsoup.Jsoup.connect(url).get()
-                doc.select("select#qwShowDropdown").remove()
-                doc.select("*:matchesOwn(^\\s*Scegli giorno\\s*\$)").forEach { it.remove() }
+                val doc = Jsoup.connect(url).get()
 
-                val element = doc.selectFirst("div.qt-show-schedule.qt-shows-schedule-refresh")
+                val dayNames = listOf("Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato")
+                val todayIndex = Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 1
+                val todayName = dayNames[todayIndex]
 
-                element?.select("img")?.forEach { img ->
-                    val realSrc = img.absUrl("src").ifEmpty { img.absUrl("data-src") }
-                    img.attr("src", realSrc)
-                    img.removeAttr("data-src")
+                val allScheduleDivs = doc.select("div.qt-part-show-schedule-day-item").toList()
+
+                val filteredDivs = allScheduleDivs.filter { element ->
+                    element.select("span.qt-day").any { daySpan ->
+                        daySpan.text().equals(todayName, ignoreCase = true)
+                    }
                 }
 
-                val fallbackImages = mapOf(
-                    "METEO ON AIR" to "https://yourdomain.it/fallbacks/meteo.png",
-                    "PILLOLE DI ECONOMIA" to "https://yourdomain.it/fallbacks/economia.png"
-                )
-
-                element?.select(".qt-header-bg")?.forEach { div ->
-                    val bgUrl = div.absUrl("data-bgimage")
-                    var finalUrl = bgUrl
-
-                    if (bgUrl.isEmpty()) {
-                        val parent = div.parent()
-                        val fallbackKey = parent?.selectFirst(".qt-ellipsis a")?.text()?.trim()?.uppercase()
-                        if (fallbackKey != null && fallbackImages.containsKey(fallbackKey)) {
-                            finalUrl = fallbackImages[fallbackKey] ?: ""
+                // Ensure background images are applied
+                filteredDivs.forEach { div ->
+                    div.select(".qt-header-bg").forEach { bgDiv ->
+                        val bgUrl = bgDiv.attr("data-bgimage")
+                        if (bgUrl.isNotEmpty()) {
+                            bgDiv.attr("style", "background-image:url('$bgUrl'); background-size:cover; background-position:center; background-repeat:no-repeat;")
                         }
                     }
-
-                    if (finalUrl.isNotEmpty()) {
-                        div.attr(
-                            "style", "background-image: url('$finalUrl'); " +
-                                    "background-size: cover; background-position: center; " +
-                                    "background-repeat: no-repeat; min-height: 180px;"
-                        )
-                    }
                 }
-
-                val content = element?.html() ?: "<p>Contenuto non disponibile</p>"
+                val finalContent = if (filteredDivs.isNotEmpty()) {
+                    filteredDivs.joinToString("\n") { it.outerHtml() }
+                } else {
+                    "<p>Nessun programma disponibile per $todayName</p>"
+                }
 
                 val cssLinks = doc.select("link[rel=stylesheet]").joinToString("\n") {
                     """<link rel="stylesheet" href="${it.absUrl("href")}">"""
                 }
 
-                val cleanHtml = """
-                <html>
-                    <head>
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                        $cssLinks
-                        <style>
-                            body { margin: 0; padding: 16px; font-family: sans-serif; background: #fff; color: #000; }
-                            img, iframe { max-width: 100%; height: auto; display: block; margin: 8px auto; }
-                            .qt-header-bg {
-                                min-height: 180px;
-                                background-size: cover !important;
-                                background-position: center !important;
-                                background-repeat: no-repeat !important;
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        $content
-                    </body>
-                </html>
-            """.trimIndent()
+                val fullHtml = """
+                    <html>
+                        <head>
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                            $cssLinks
+                            <style>
+                                body { margin: 0; padding: 16px; font-family: sans-serif; background: #fff; color: #000; }
+                                img, iframe { max-width: 100%; height: auto; display: block; margin: 8px auto; }
+                                .qt-header-bg {
+                                    min-height: 180px;
+                                    background-size: cover !important;
+                                    background-position: center !important;
+                                    background-repeat: no-repeat !important;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            $finalContent
+                        </body>
+                    </html>
+                """.trimIndent()
 
                 runOnUiThread {
-                    webView.loadDataWithBaseURL(url, cleanHtml, "text/html", "UTF-8", null)
+                    webView.loadDataWithBaseURL(url, fullHtml, "text/html", "UTF-8", null)
                 }
+
             } catch (e: Exception) {
                 e.printStackTrace()
             }

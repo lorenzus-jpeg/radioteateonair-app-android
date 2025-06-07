@@ -1,93 +1,127 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="#008000">
 
-    <LinearLayout
-        android:id="@+id/logoArea"
+    <View
+        android:id="@+id/topSpacer"
+        android:layout_width="0dp"
+        android:layout_height="24dp"
+        android:background="#CC000000"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <ImageView
+        android:id="@+id/logo_toa"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:src="@drawable/logo_toa"
+        android:contentDescription="Teate On Air Logo"
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true"
+        app:layout_constraintTop_toBottomOf="@id/topSpacer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/logoText"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:background="#111111">
+        android:layout_height="wrap_content"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:ellipsize="marquee"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:singleLine="true"
+        android:scrollHorizontally="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        app:layout_constraintTop_toBottomOf="@id/logo_toa"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:src="@drawable/logo_toa"
-            android:contentDescription="Teate On Air Logo"
-            android:adjustViewBounds="true"
-            android:scaleType="fitCenter" />
 
-        
-        <TextView
-            android:id="@+id/logoText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="La web radio di Erga Omnes ETS/ODV"
-            android:textColor="#FFFFFF"
-            android:textSize="22sp"
-            android:layout_marginTop="8dp"
-            android:fontFamily="sans-serif-medium" />
-    </LinearLayout>
+
+
 
     <WebView
         android:id="@+id/webView"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_weight="2"
         android:overScrollMode="never"
-        android:background="#ffffff" />
+        android:background="#ffffff"
+        app:layout_constraintTop_toBottomOf="@id/logoText"
+        app:layout_constraintBottom_toTopOf="@id/playerBar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/playerBar"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#008000"
+        app:layout_constraintBottom_toTopOf="@id/bottomSpacer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent="0.12">
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/startButton"
             android:layout_width="64dp"
             android:layout_height="64dp"
-            android:layout_gravity="center_horizontal|bottom"
-            android:layout_marginBottom="36dp"
             android:text="▶"
             android:textColor="#008000"
             android:textSize="28sp"
-            android:background="@drawable/round_black_button"
-            android:fontFamily="sans-serif" />
+            android:background="@drawable/round_white_button"
+            android:fontFamily="sans-serif"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:visibility="visible"
+            android:backgroundTint="@null"
+            android:stateListAnimator="@null"
+            android:elevation="0dp" />
 
         <LinearLayout
             android:id="@+id/bottomBar"
-            android:layout_width="match_parent"
-            android:layout_height="140dp"
-            android:layout_gravity="bottom"
-            android:layout_marginBottom="24dp"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
             android:orientation="horizontal"
-            android:background="#008000"
-            android:paddingStart="24dp"
-            android:paddingEnd="24dp"
-            android:paddingTop="16dp"
-            android:paddingBottom="16dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
             android:gravity="center_vertical"
-            android:visibility="gone">
+            android:visibility="gone"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
-            <androidx.appcompat.widget.AppCompatButton
+            <androidx.appcompat.widget.AppCompatImageButton
                 android:id="@+id/playButton"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                android:text="⏹"
-                android:textColor="#00FF00"
-                android:textSize="28sp"
-                android:background="@drawable/round_black_button"
-                android:fontFamily="sans-serif" />
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_gravity="center_vertical"
+                android:background="@drawable/round_white_button"
+                android:src="@drawable/ic_stop"
+                android:scaleType="center"
+                app:tint="#008000"
+                android:contentDescription="Stop"
+                android:elevation="0dp"
+                android:stateListAnimator="@null"
+                android:backgroundTint="@null" />
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
+                android:layout_weight="3"
                 android:orientation="vertical"
                 android:gravity="center"
                 android:paddingHorizontal="12dp">
@@ -118,27 +152,40 @@
 
             <LinearLayout
                 android:id="@+id/eqLayout"
-                android:layout_width="wrap_content"
-                android:layout_height="60dp"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
                 android:orientation="horizontal"
-                android:gravity="center">
+                android:gravity="bottom|end"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp">
 
-                <it.radioteateonair.app.BarView android:id="@+id/bar1" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
-                <it.radioteateonair.app.BarView android:id="@+id/bar2" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
-                <it.radioteateonair.app.BarView android:id="@+id/bar3" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
-                <it.radioteateonair.app.BarView android:id="@+id/bar4" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
-                <it.radioteateonair.app.BarView android:id="@+id/bar5" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
-                <it.radioteateonair.app.BarView android:id="@+id/bar6" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
-                <it.radioteateonair.app.BarView android:id="@+id/bar7" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
-                <it.radioteateonair.app.BarView android:id="@+id/bar8" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
-                <it.radioteateonair.app.BarView android:id="@+id/bar9" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
-                <it.radioteateonair.app.BarView android:id="@+id/bar10" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
-                <it.radioteateonair.app.BarView android:id="@+id/bar11" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
-                <it.radioteateonair.app.BarView android:id="@+id/bar12" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
-                <it.radioteateonair.app.BarView android:id="@+id/bar13" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
-                <it.radioteateonair.app.BarView android:id="@+id/bar14" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
-                <it.radioteateonair.app.BarView android:id="@+id/bar15" android:layout_width="4dp" android:layout_height="match_parent" android:layout_margin="1dp"/>
+                <!-- 15 evenly spaced responsive bars -->
+                <it.radioteateonair.app.BarView android:id="@+id/bar1" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="2dp"/>
+                <it.radioteateonair.app.BarView android:id="@+id/bar2" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="2dp"/>
+                <it.radioteateonair.app.BarView android:id="@+id/bar3" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="2dp"/>
+                <it.radioteateonair.app.BarView android:id="@+id/bar4" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="2dp"/>
+                <it.radioteateonair.app.BarView android:id="@+id/bar5" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="2dp"/>
+                <it.radioteateonair.app.BarView android:id="@+id/bar6" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="2dp"/>
+                <it.radioteateonair.app.BarView android:id="@+id/bar7" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="2dp"/>
+                <it.radioteateonair.app.BarView android:id="@+id/bar8" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="2dp"/>
+                <it.radioteateonair.app.BarView android:id="@+id/bar9" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="2dp"/>
+                <it.radioteateonair.app.BarView android:id="@+id/bar10" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="2dp"/>
+                <it.radioteateonair.app.BarView android:id="@+id/bar11" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="2dp"/>
+                <it.radioteateonair.app.BarView android:id="@+id/bar12" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="2dp"/>
+                <it.radioteateonair.app.BarView android:id="@+id/bar13" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="2dp"/>
+                <it.radioteateonair.app.BarView android:id="@+id/bar14" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="2dp"/>
+                <it.radioteateonair.app.BarView android:id="@+id/bar15" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="2dp"/>
             </LinearLayout>
         </LinearLayout>
-    </FrameLayout>
-</LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <View
+        android:id="@+id/bottomSpacer"
+        android:layout_width="0dp"
+        android:layout_height="32dp"
+        android:background="#CC000000"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>
