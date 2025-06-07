@@ -15,3 +15,8 @@
 
 # Ignore local signing config
 local.properties
+
+# Android Studio
+.gradle
+.idea
+*.iml
