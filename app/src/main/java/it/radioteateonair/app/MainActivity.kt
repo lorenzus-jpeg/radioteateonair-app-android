@@ -1,35 +1,28 @@
 package it.radioteateonair.app
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.text.TextUtils
 import android.view.View
 import android.webkit.WebView
-import android.widget.TextView
+import android.webkit.WebViewClient
+import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.AppCompatButton
-import androidx.appcompat.widget.AppCompatImageButton
-import org.json.JSONObject
 import org.jsoup.Jsoup
-import java.net.URL
 import java.util.*
-import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
 
-    private val executor = Executors.newSingleThreadExecutor()
-    private val handler = Handler(Looper.getMainLooper())
-
-    private lateinit var artistView: TextView
-    private lateinit var songTitleView: TextView
+    private lateinit var startButton: Button
+    private lateinit var playButton: Button
+    private lateinit var bottomBar: LinearLayout
+    private lateinit var songTitle: TextView
+    private lateinit var artistName: TextView
     private lateinit var bars: List<BarView>
-    private lateinit var playButton: AppCompatImageButton
-    private lateinit var startButton: AppCompatButton
-    private lateinit var bottomBar: View
-    private lateinit var logoText: TextView
-
+    private lateinit var handler: Handler
     private var isPlaying = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,9 +32,8 @@ class MainActivity : AppCompatActivity() {
         startButton = findViewById(R.id.startButton)
         playButton = findViewById(R.id.playButton)
         bottomBar = findViewById(R.id.bottomBar)
-        artistView = findViewById(R.id.artistName)
-        songTitleView = findViewById(R.id.songTitle)
-        logoText = findViewById(R.id.logoText)
+        songTitle = findViewById(R.id.songTitle)
+        artistName = findViewById(R.id.artistName)
 
         bars = listOf(
             findViewById(R.id.bar1), findViewById(R.id.bar2), findViewById(R.id.bar3),
@@ -51,27 +43,7 @@ class MainActivity : AppCompatActivity() {
             findViewById(R.id.bar13), findViewById(R.id.bar14), findViewById(R.id.bar15)
         )
 
-        bottomBar.visibility = View.GONE
-
-        // Marquee strings
-        val messages = listOf(
-            "Benvenuti nell'app ufficiale di Radio Teate On Air",
-            "Ascolta la diretta!",
-            "Visita il sito radioteateonair.it",
-            "Seguici su Instagram @radioteateonair",
-            "Ascolta Soundcheck, la nostra nuova rubrica!"
-        )
-        val repeated = messages.joinToString("     •     ") + "     •     "
-        val fullMarquee = repeated.repeat(10)
-        logoText.text = fullMarquee
-        logoText.setSingleLine(true)
-        logoText.ellipsize = TextUtils.TruncateAt.MARQUEE
-        logoText.marqueeRepeatLimit = -1
-        logoText.setHorizontallyScrolling(true)
-        logoText.isFocusable = true
-        logoText.isFocusableInTouchMode = true
-        logoText.requestFocus()
-        logoText.isSelected = true
+        handler = Handler(Looper.getMainLooper())
 
         startButton.setOnClickListener {
             startService(Intent(this, RadioService::class.java))
@@ -93,85 +65,68 @@ class MainActivity : AppCompatActivity() {
         }
 
         playButton.setOnClickListener {
-            if (isPlaying) {
-                stopService(Intent(this, RadioService::class.java))
-                bars.forEach { it.stopAnimation() }
-                isPlaying = false
+            stopService(Intent(this, RadioService::class.java))
+            bars.forEach { it.stopAnimation() }
+            isPlaying = false
 
-                startButton.apply {
-                    visibility = View.VISIBLE
-                    alpha = 0f
-                    scaleX = 0.67f
-                    scaleY = 0.67f
-                    translationX = -resources.displayMetrics.widthPixels / 2f + 96f
-                }
-
-                bottomBar.animate()
-                    .alpha(0f)
-                    .setDuration(300)
-                    .withEndAction {
-                        bottomBar.visibility = View.GONE
-                        bottomBar.alpha = 1f
-                        startButton.animate()
+            bottomBar.animate()
+                .alpha(0f)
+                .setDuration(200)
+                .withEndAction {
+                    bottomBar.visibility = View.GONE
+                    startButton.apply {
+                        visibility = View.VISIBLE
+                        alpha = 0f
+                        translationX = -resources.displayMetrics.widthPixels / 2f + 96f
+                        scaleX = 0.67f
+                        scaleY = 0.67f
+                        animate()
+                            .alpha(1f)
                             .translationX(0f)
                             .scaleX(1f)
                             .scaleY(1f)
-                            .alpha(1f)
                             .setDuration(400)
                             .start()
                     }
-                    .start()
-            }
+                }
+                .start()
         }
 
-        loadFilteredWebPage()
+        findViewById<View>(R.id.box1).setOnClickListener {
+            showPopupWithWebView("https://radioteateonair.it/palinsesto")
+        }
+
+        findViewById<View>(R.id.box2).setOnClickListener { showToast("Box 2 clicked") }
+        findViewById<View>(R.id.box3).setOnClickListener { showToast("Box 3 clicked") }
+        findViewById<View>(R.id.box4).setOnClickListener { showToast("Box 4 clicked") }
+        findViewById<View>(R.id.box5).setOnClickListener { showToast("Box 5 clicked") }
+        findViewById<View>(R.id.box6).setOnClickListener { showToast("Box 6 clicked") }
     }
 
     private fun startSongInfoUpdater() {
-        val jsonUrl = "https://nr14.newradio.it:8663/status-json.xsl"
-
-        val updateTask = object : Runnable {
+        handler.post(object : Runnable {
             override fun run() {
-                executor.execute {
-                    try {
-                        val response = URL(jsonUrl).readText()
-                        val json = JSONObject(response)
-                        val fullTitle = json
-                            .getJSONObject("icestats")
-                            .getJSONObject("source")
-                            .getString("yp_currently_playing")
-
-                        val parts = fullTitle.split(" - ", limit = 2)
-                        val artist = parts.getOrNull(0)?.trim() ?: "Unknown Artist"
-                        val song = parts.getOrNull(1)?.trim() ?: "Unknown Title"
-
-                        handler.post {
-                            artistView.text = artist
-                            songTitleView.text = song
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        handler.post {
-                            artistView.text = "Loading..."
-                            songTitleView.text = ""
-                        }
-                    } finally {
-                        handler.postDelayed(this, 15000)
-                    }
+                songTitle.text = "Titolo Esempio"
+                artistName.text = "Artista Esempio"
+                if (isPlaying) {
+                    handler.postDelayed(this, 5000)
                 }
             }
-        }
-
-        handler.post(updateTask)
+        })
     }
 
-    private fun loadFilteredWebPage() {
-        val webView = findViewById<WebView>(R.id.webView)
+    @SuppressLint("SetJavaScriptEnabled")
+    private fun showPopupWithWebView(url: String) {
+        val webView = WebView(this)
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
         webView.settings.loadsImagesAutomatically = true
+        webView.webViewClient = WebViewClient()
 
-        val url = "https://www.radioteateonair.it/palinsesto/"
+        AlertDialog.Builder(this)
+            .setView(webView)
+            .setNegativeButton("Chiudi") { dialog, _ -> dialog.dismiss() }
+            .show()
 
         Thread {
             try {
@@ -189,16 +144,18 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
-                ///// Ensure background images are applied
-
                 filteredDivs.forEach { div ->
                     div.select(".qt-header-bg").forEach { bgDiv ->
                         val bgUrl = bgDiv.attr("data-bgimage")
                         if (bgUrl.isNotEmpty()) {
-                            bgDiv.attr("style", "background-image:url('$bgUrl'); background-size:cover; background-position:center; background-repeat:no-repeat;")
+                            bgDiv.attr(
+                                "style",
+                                "background-image:url('$bgUrl'); background-size:cover; background-position:center; background-repeat:no-repeat;"
+                            )
                         }
                     }
                 }
+
                 val finalContent = if (filteredDivs.isNotEmpty()) {
                     filteredDivs.joinToString("\n") { it.outerHtml() }
                 } else {
@@ -239,5 +196,9 @@ class MainActivity : AppCompatActivity() {
                 e.printStackTrace()
             }
         }.start()
+    }
+
+    private fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 }
