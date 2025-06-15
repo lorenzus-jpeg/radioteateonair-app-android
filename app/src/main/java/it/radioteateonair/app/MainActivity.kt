@@ -13,6 +13,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import org.jsoup.Jsoup
 import java.util.*
+import android.net.Uri
+import android.widget.ImageView
 
 class MainActivity : AppCompatActivity() {
 
@@ -99,8 +101,50 @@ class MainActivity : AppCompatActivity() {
         findViewById<View>(R.id.box2).setOnClickListener { showToast("Box 2 clicked") }
         findViewById<View>(R.id.box3).setOnClickListener { showToast("Box 3 clicked") }
         findViewById<View>(R.id.box4).setOnClickListener { showToast("Box 4 clicked") }
-        findViewById<View>(R.id.box5).setOnClickListener { showToast("Box 5 clicked") }
-        findViewById<View>(R.id.box6).setOnClickListener { showToast("Box 6 clicked") }
+        //findViewById<View>(R.id.box5).setOnClickListener { showToast("Box 5 clicked") }
+        //findViewById<View>(R.id.box6).setOnClickListener { showToast("Box 6 clicked") }
+
+        val box2: ImageView = findViewById(R.id.box2)
+        box2.setOnClickListener {
+            val urlIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.radioteateonair.it/programmi/"))
+            startActivity(urlIntent)
+        }
+
+        val box3: ImageView = findViewById(R.id.box2)
+        box2.setOnClickListener {
+            val urlIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.radioteateonair.it/about-us/"))
+            startActivity(urlIntent)
+        }
+
+
+        val box4: ImageView = findViewById(R.id.box4)
+
+        box4.setOnClickListener {
+            val dialogView = layoutInflater.inflate(R.layout.dialog_socials, null)
+            val dialog = AlertDialog.Builder(this)
+                .setView(dialogView)
+                .create()
+
+            dialogView.findViewById<ImageView>(R.id.instagram).setOnClickListener {
+                val url = "https://www.instagram.com/yourprofile"
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                dialog.dismiss()
+            }
+
+            dialogView.findViewById<ImageView>(R.id.facebook).setOnClickListener {
+                val url = "https://www.facebook.com/yourpage"
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                dialog.dismiss()
+            }
+
+            dialogView.findViewById<ImageView>(R.id.youtube).setOnClickListener {
+                val url = "https://www.youtube.com/yourchannel"
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                dialog.dismiss()
+            }
+
+            dialog.show()
+        }
     }
 
     private fun startSongInfoUpdater() {

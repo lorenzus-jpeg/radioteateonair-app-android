@@ -1,0 +1,26 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="#E6E6E6">
+
+    <!-- Outer circle (globe outline) -->
+    <path
+        android:fillAlpha="0"
+        android:strokeColor="#E6E6E6"
+        android:strokeWidth="0.8"
+        android:pathData="M12,2a10,10 0 1,1 0,20a10,10 0 0,1 0,-20z"/>
+
+    <!-- Horizontal parallels -->
+    <path android:fillAlpha="0" android:strokeColor="#E6E6E6" android:strokeWidth="0.6" android:pathData="M6,7c4,2 8,2 12,0"/>
+    <path android:fillAlpha="0" android:strokeColor="#E6E6E6" android:strokeWidth="0.6" android:pathData="M5,12h14"/>
+    <path android:fillAlpha="0" android:strokeColor="#E6E6E6" android:strokeWidth="0.6" android:pathData="M6,17c4,-2 8,-2 12,0"/>
+    <path android:fillAlpha="0" android:strokeColor="#E6E6E6" android:strokeWidth="0.6" android:pathData="M8,4c2,1 6,1 8,0"/>
+
+    <!-- Vertical meridians -->
+    <path android:fillAlpha="0" android:strokeColor="#E6E6E6" android:strokeWidth="0.6" android:pathData="M12,2c-2,3 -2,13 0,20"/>
+    <path android:fillAlpha="0" android:strokeColor="#E6E6E6" android:strokeWidth="0.6" android:pathData="M12,2c2,3 2,13 0,20"/>
+    <path android:fillAlpha="0" android:strokeColor="#E6E6E6" android:strokeWidth="0.6" android:pathData="M9,2c-1.5,3 -1.5,13 0,20"/>
+    <path android:fillAlpha="0" android:strokeColor="#E6E6E6" android:strokeWidth="0.6" android:pathData="M15,2c1.5,3 1.5,13 0,20"/>
+</vector>

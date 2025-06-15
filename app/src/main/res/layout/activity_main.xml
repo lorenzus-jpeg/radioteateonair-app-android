@@ -60,46 +60,52 @@
             android:background="@drawable/box_background"
             android:src="@drawable/ic_calendar"
             android:scaleType="centerInside"
+            android:padding="8dp"
+            app:tint="#008000"
             android:clickable="true"
-            android:contentDescription="Box 1" />
+            android:contentDescription="Calendar" />
 
-        <TextView
+
+        <ImageView
             android:id="@+id/box2"
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:layout_margin="8dp"
-            android:gravity="center"
-            android:text="Box 2"
-            android:textColor="#000000"
-            android:textSize="16sp"
             android:background="@drawable/box_background"
-            android:clickable="true" />
+            android:src="@drawable/ic_mic"
+            android:scaleType="fitCenter"
+            android:padding="20dp"
+            app:tint="#008000"
+            android:clickable="true"
+            android:contentDescription="Mic" />
 
-        <TextView
+
+        <ImageView
             android:id="@+id/box3"
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:layout_margin="8dp"
-            android:gravity="center"
-            android:text="Box 3"
-            android:textColor="#000000"
-            android:textSize="16sp"
             android:background="@drawable/box_background"
-            android:clickable="true" />
+            android:src="@drawable/ic_group"
+            android:scaleType="fitCenter"
+            android:clickable="true"
+            android:contentDescription="Chi siamo"
+            app:tint="#008000" />
 
-        <TextView
+        <ImageView
             android:id="@+id/box4"
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:layout_margin="8dp"
-            android:gravity="center"
-            android:text="Box 4"
-            android:textColor="#000000"
-            android:textSize="16sp"
             android:background="@drawable/box_background"
-            android:clickable="true" />
+            android:src="@drawable/ic_social"
+            android:scaleType="fitCenter"
+            android:padding="20dp"
+            app:tint="#008000"
+            android:clickable="true"
+            android:contentDescription="Social" />
 
-        <TextView
+        <!--TextView
             android:id="@+id/box5"
             android:layout_width="100dp"
             android:layout_height="100dp"
@@ -118,10 +124,9 @@
             android:layout_margin="8dp"
             android:gravity="center"
             android:text="Box 6"
-            android:textColor="#000000"
             android:textSize="16sp"
             android:background="@drawable/box_background"
-            android:clickable="true" />
+            android:clickable="true" / -->
     </GridLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -129,7 +134,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:background="#008000"
-        app:layout_constraintBottom_toTopOf="@id/bottomSpacer"
+        app:layout_constraintBottom_toTopOf="@id/insetSpacer"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHeight_percent="0.12">
@@ -244,12 +249,12 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <View
-        android:id="@+id/bottomSpacer"
+        android:id="@+id/insetSpacer"
         android:layout_width="0dp"
-        android:layout_height="8dp"
-        android:background="#000000"
+        android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
