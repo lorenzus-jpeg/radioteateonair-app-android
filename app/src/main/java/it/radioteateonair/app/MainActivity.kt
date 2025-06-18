@@ -15,6 +15,9 @@ import org.jsoup.Jsoup
 import java.util.*
 import android.net.Uri
 import android.widget.ImageView
+import org.json.JSONObject
+import java.net.URL
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -23,8 +26,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var bottomBar: LinearLayout
     private lateinit var songTitle: TextView
     private lateinit var artistName: TextView
-    private lateinit var bars: List<BarView>
     private lateinit var handler: Handler
+    private val executor = java.util.concurrent.Executors.newSingleThreadExecutor()
+
     private var isPlaying = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,38 +41,39 @@ class MainActivity : AppCompatActivity() {
         songTitle = findViewById(R.id.songTitle)
         artistName = findViewById(R.id.artistName)
 
-        bars = listOf(
-            findViewById(R.id.bar1), findViewById(R.id.bar2), findViewById(R.id.bar3),
-            findViewById(R.id.bar4), findViewById(R.id.bar5), findViewById(R.id.bar6),
-            findViewById(R.id.bar7), findViewById(R.id.bar8), findViewById(R.id.bar9),
-            findViewById(R.id.bar10), findViewById(R.id.bar11), findViewById(R.id.bar12),
-            findViewById(R.id.bar13), findViewById(R.id.bar14), findViewById(R.id.bar15)
-        )
 
         handler = Handler(Looper.getMainLooper())
 
         startButton.setOnClickListener {
-            startService(Intent(this, RadioService::class.java))
-            bars.forEach { it.startAnimation() }
-            isPlaying = true
+            if (!isPlaying) {
+                startService(Intent(this, RadioService::class.java))
+                isPlaying = true
 
-            startButton.animate()
-                .translationX(-resources.displayMetrics.widthPixels / 2f + 96f)
-                .scaleX(0.67f)
-                .scaleY(0.67f)
-                .setDuration(400)
-                .withEndAction {
-                    startButton.visibility = View.GONE
-                    bottomBar.visibility = View.VISIBLE
-                }
-                .start()
+                startButton.animate()
+                    .translationX(-resources.displayMetrics.widthPixels / 2f + 96f)
+                    .scaleX(0.67f)
+                    .scaleY(0.67f)
+                    .setDuration(400)
+                    .withEndAction {
+                        // Hide play button
+                        startButton.visibility = View.GONE
 
-            startSongInfoUpdater()
+                        // Always reset bottomBar after animation
+                        bottomBar.alpha = 0f
+                        bottomBar.visibility = View.VISIBLE
+                        bottomBar.animate()
+                            .alpha(1f)
+                            .setDuration(200)
+                            .start()
+                    }
+                    .start()
+
+                startSongInfoUpdater()
+            }
         }
 
         playButton.setOnClickListener {
             stopService(Intent(this, RadioService::class.java))
-            bars.forEach { it.stopAnimation() }
             isPlaying = false
 
             bottomBar.animate()
@@ -94,6 +99,8 @@ class MainActivity : AppCompatActivity() {
                 .start()
         }
 
+
+
         findViewById<View>(R.id.box1).setOnClickListener {
             showPopupWithWebView("https://radioteateonair.it/palinsesto")
         }
@@ -110,8 +117,8 @@ class MainActivity : AppCompatActivity() {
             startActivity(urlIntent)
         }
 
-        val box3: ImageView = findViewById(R.id.box2)
-        box2.setOnClickListener {
+        val box3: ImageView = findViewById(R.id.box3)
+        box3.setOnClickListener {
             val urlIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.radioteateonair.it/about-us/"))
             startActivity(urlIntent)
         }
@@ -132,13 +139,19 @@ class MainActivity : AppCompatActivity() {
             }
 
             dialogView.findViewById<ImageView>(R.id.facebook).setOnClickListener {
-                val url = "https://www.facebook.com/yourpage"
+                val url = "https://www.instagram.com/radio_teateonair"
                 startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
                 dialog.dismiss()
             }
 
             dialogView.findViewById<ImageView>(R.id.youtube).setOnClickListener {
-                val url = "https://www.youtube.com/yourchannel"
+                val url = "https://www.youtube.com/@radioteateonair4409"
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                dialog.dismiss()
+            }
+
+            dialogView.findViewById<ImageView>(R.id.tiktok).setOnClickListener {
+                val url = "https://www.tiktok.com/@radioteateonair"
                 startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
                 dialog.dismiss()
             }
@@ -148,16 +161,43 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startSongInfoUpdater() {
-        handler.post(object : Runnable {
+        val jsonUrl = "https://nr14.newradio.it:8663/status-json.xsl"
+
+        val updateTask = object : Runnable {
             override fun run() {
-                songTitle.text = "Titolo Esempio"
-                artistName.text = "Artista Esempio"
-                if (isPlaying) {
-                    handler.postDelayed(this, 5000)
+                executor.execute {
+                    try {
+                        val response = URL(jsonUrl).readText()
+                        val json = JSONObject(response)
+                        val fullTitle = json
+                            .getJSONObject("icestats")
+                            .getJSONObject("source")
+                            .getString("yp_currently_playing")
+
+                        val parts = fullTitle.split(" - ", limit = 2)
+                        val artist = parts.getOrNull(0)?.trim() ?: "Unknown Artist"
+                        val song = parts.getOrNull(1)?.trim() ?: "Unknown Title"
+
+                        handler.post {
+                            artistName.text = artist
+                            songTitle.text = song
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        handler.post {
+                            artistName.text = "Caricamento..."
+                            songTitle.text = ""
+                        }
+                    } finally {
+                        handler.postDelayed(this, 10000)
+                    }
                 }
             }
-        })
+        }
+
+        handler.post(updateTask)
     }
+
 
     @SuppressLint("SetJavaScriptEnabled")
     private fun showPopupWithWebView(url: String) {
@@ -245,4 +285,6 @@ class MainActivity : AppCompatActivity() {
     private fun showToast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
+
+
 }

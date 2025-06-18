@@ -33,4 +33,13 @@
         android:src="@drawable/ic_youtube"
         android:contentDescription="YouTube"
         android:clickable="true" />
+
+    <ImageView
+        android:id="@+id/tiktok"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_margin="8dp"
+        android:src="@drawable/ic_tiktok"
+        android:contentDescription="TikTok"
+        android:clickable="true" />
 </LinearLayout>
