@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tablet-specific dimensions (7+ inch screens) -->
+
+    <!-- Logo dimensions -->
+    <dimen name="logo_margin_top">24dp</dimen>
+    <dimen name="logo_margin_horizontal">64dp</dimen>
+    <dimen name="logo_max_height">180dp</dimen>
+
+    <!-- Grid dimensions -->
+    <dimen name="grid_margin_horizontal">48dp</dimen>
+    <dimen name="grid_margin_top">32dp</dimen>
+    <dimen name="grid_margin_bottom">32dp</dimen>
+
+    <!-- Box dimensions -->
+    <dimen name="box_margin">12dp</dimen>
+    <dimen name="box_padding">24dp</dimen>
+
+    <!-- Small centered box dimensions -->
+    <dimen name="small_box_size">100dp</dimen>
+    <dimen name="small_box_margin">12dp</dimen>
+    <dimen name="small_box_padding">20dp</dimen>
+    <dimen name="box_container_width">260dp</dimen>
+    <dimen name="box_container_height">260dp</dimen>
+
+    <!-- Player bar dimensions -->
+    <dimen name="player_bar_height">100dp</dimen>
+    <dimen name="player_bar_margin_bottom">24dp</dimen>
+
+    <!-- Button dimensions -->
+    <dimen name="start_button_size">80dp</dimen>
+    <dimen name="start_button_text_size">32sp</dimen>
+    <dimen name="play_button_size">64dp</dimen>
+    <dimen name="play_button_text_size">24sp</dimen>
+
+    <!-- Text dimensions -->
+    <dimen name="song_title_text_size">18sp</dimen>
+    <dimen name="artist_name_text_size">16sp</dimen>
+    <dimen name="artist_name_margin_top">4dp</dimen>
+
+    <!-- Padding dimensions -->
+    <dimen name="bottom_bar_padding">24dp</dimen>
+    <dimen name="song_info_padding">16dp</dimen>
+
+    <!-- Dialog dimensions -->
+    <dimen name="dialog_padding">28dp</dimen>
+    <dimen name="dialog_title_text_size">22sp</dimen>
+    <dimen name="dialog_title_margin_bottom">20dp</dimen>
+    <dimen name="social_icon_size">72dp</dimen>
+    <dimen name="social_icon_margin">12dp</dimen>
+    <dimen name="social_icon_padding">16dp</dimen>
+</resources>

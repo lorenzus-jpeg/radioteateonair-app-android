@@ -1,8 +1,14 @@
+<!-- Instagram -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="24dp" android:height="24dp"
-    android:viewportWidth="24" android:viewportHeight="24"
-    android:tint="#008000">
+    android:width="512dp"
+    android:height="512dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+
     <path
         android:fillColor="#008000"
-        android:pathData="M7,2h10c2.8,0 5,2.2 5,5v10c0,2.8 -2.2,5 -5,5H7c-2.8,0 -5,-2.2 -5,-5V7c0,-2.8 2.2,-5 5,-5zM12,8a4,4 0 1,0 4,4 4,4 0 0,0 -4,-4zM18,5.5a1,1 0 1,0 1,1 1,1 0 0,0 -1,-1zM12,10a2,2 0 1,1 -2,2 2,2 0 0,1 2,-2z" />
+        android:pathData="M349.33,69.33H162.67C105.13,69.33,60,114.47,60,172v186.67C60,397.53,105.13,442.67,162.67,442.67h186.67
+                          C406.87,442.67,452,397.53,452,358.67V172C452,114.47,406.87,69.33,349.33,69.33Zm-93.33,264
+                          c-42.35,0-76.67,-34.31-76.67,-76.67s34.31,-76.67,76.67,-76.67,76.67,34.31,76.67,76.67-34.31,76.67-76.67,76.67ZM387,155.33
+                          a24.67,24.67,0,1,1-24.67,-24.67A24.67,24.67,0,0,1,387,155.33Z"/>
 </vector>

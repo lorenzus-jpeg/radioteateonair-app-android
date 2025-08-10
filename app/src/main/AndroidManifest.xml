@@ -3,8 +3,10 @@
 
     <!-- Required permissions -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" /> <!-- ✅ Required for mediaPlayback -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:allowBackup="true"
@@ -13,6 +15,7 @@
         android:usesCleartextTraffic="true"
         android:label="Teate On Air"
         android:theme="@style/Theme.Radioteateonair.NoActionBar">
+
         <!-- Your MainActivity -->
         <activity
             android:name=".MainActivity"
@@ -23,10 +26,15 @@
             </intent-filter>
         </activity>
 
-        <!-- Declare your foreground service -->
+        <!-- Enhanced RadioService with media session support -->
         <service
             android:name=".RadioService"
             android:exported="false"
-            android:foregroundServiceType="mediaPlayback" />
+            android:foregroundServiceType="mediaPlayback">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </service>
+
     </application>
 </manifest>

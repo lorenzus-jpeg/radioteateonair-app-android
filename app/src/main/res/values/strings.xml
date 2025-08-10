@@ -1,4 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">radioteateonair</string>
-    <string name="stop">Stop</string>
+    <string name="app_name">Radio Teate OnAir</string>
+
+    <!-- Content descriptions for accessibility -->
+    <string name="logo_description">Radio Teate OnAir Logo</string>
+    <string name="calendar_description">Palinsesto</string>
+    <string name="programs_description">Programmi</string>
+    <string name="about_description">Chi siamo</string>
+    <string name="social_description">Social Media</string>
+    <string name="stop_description">Ferma riproduzione</string>
+
+    <!-- Sample text -->
+    <string name="sample_title">Titolo Esempio</string>
+    <string name="sample_artist">Artista Esempio</string>
+
+    <!-- Loading and error text -->
+    <string name="loading">Caricamento...</string>
+    <string name="unknown_artist">Artista Sconosciuto</string>
+    <string name="unknown_title">Titolo Sconosciuto</string>
+
+    <!-- Dialog text -->
+    <string name="close">Chiudi</string>
+    <string name="follow_us">Seguici sui Social</string>
+
+    <!-- Social media descriptions -->
+    <string name="instagram_description">Instagram</string>
+    <string name="facebook_description">Facebook</string>
+    <string name="youtube_description">YouTube</string>
+    <string name="tiktok_description">TikTok</string>
+
+    <!-- Toast messages -->
+    <string name="box_clicked">Box %1$d cliccato</string>
+
+    <!-- Schedule text -->
+    <string name="no_programs_today">Nessun programma disponibile per %1$s</string>
+
+    <!-- Error messages -->
+    <string name="connection_error">Errore di connessione</string>
+    <string name="schedule_load_error">Impossibile caricare il palinsesto. Verifica la connessione internet.</string>
 </resources>
