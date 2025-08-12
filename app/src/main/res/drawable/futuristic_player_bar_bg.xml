@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Place this file in res/drawable/futuristic_player_bar_bg.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient
+        android:type="linear"
+        android:angle="90"
+        android:startColor="#1A4A3A"
+        android:centerColor="#0D5D2D"
+        android:endColor="#006B20" />
+    <corners android:radius="28dp" />
+    <stroke
+        android:width="2dp"
+        android:color="#00FF88" />
+</shape>

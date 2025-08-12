@@ -1,7 +1,10 @@
 package it.radioteateonair.app
 
 import android.annotation.SuppressLint
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Paint
@@ -11,7 +14,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.text.TextUtils
-import android.util.DisplayMetrics
 import android.view.View
 import android.view.ViewTreeObserver
 import android.webkit.WebView
@@ -24,6 +26,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import org.json.JSONObject
 import org.jsoup.Jsoup
 import java.net.URL
@@ -34,6 +37,8 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val NOTIFICATION_PERMISSION_REQUEST_CODE = 1001
+        const val ACTION_AUDIO_STOPPED = "it.radioteateonair.app.AUDIO_STOPPED"
+        const val ACTION_AUDIO_STARTED = "it.radioteateonair.app.AUDIO_STARTED"
     }
 
     private lateinit var startButton: Button
@@ -49,6 +54,31 @@ class MainActivity : AppCompatActivity() {
     private var isPlaying = false
     private var isFirstLoad = true
 
+    // BroadcastReceiver to listen for service state changes
+    private val radioStateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            when (intent?.action) {
+                ACTION_AUDIO_STOPPED -> {
+                    // Audio was stopped from notification or service
+                    isPlaying = false
+                    runOnUiThread {
+                        animateToStoppedState()
+                    }
+                }
+                ACTION_AUDIO_STARTED -> {
+                    // Audio was started from notification
+                    if (!isPlaying) {
+                        isPlaying = true
+                        runOnUiThread {
+                            animateToPlayingState()
+                            startSongInfoUpdater()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -57,8 +87,28 @@ class MainActivity : AppCompatActivity() {
         setupSystemUI()
         requestNotificationPermission()
         setupClickListeners()
+        registerRadioStateReceiver()
 
         handler = Handler(Looper.getMainLooper())
+    }
+
+    private fun registerRadioStateReceiver() {
+        val filter = IntentFilter()
+        filter.addAction(ACTION_AUDIO_STOPPED)
+        filter.addAction(ACTION_AUDIO_STARTED)
+        LocalBroadcastManager.getInstance(this).registerReceiver(radioStateReceiver, filter)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(radioStateReceiver)
+        if (isPlaying) {
+            val intent = Intent(this, RadioService::class.java).apply {
+                action = RadioService.ACTION_STOP
+            }
+            startService(intent)
+        }
+        executor.shutdown()
     }
 
     private fun initializeViews() {
@@ -132,10 +182,9 @@ class MainActivity : AppCompatActivity() {
             startActivity(urlIntent)
         }
 
-
-        // Social Media Box click listeners
+        // UPDATED SOCIAL MEDIA URLs - VERIFIED AND CORRECTED
         findViewById<View>(R.id.socialFacebook).setOnClickListener {
-            val url = "https://www.facebook.com/radioteateonair/"
+            val url = "https://www.facebook.com/radioteateonair"
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
         }
 
@@ -212,8 +261,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun animateToPlayingState() {
         val screenWidth = resources.displayMetrics.widthPixels
-        val targetTranslationX = -screenWidth / 2f + getResponsiveValue(96f)
-        val targetScale = getResponsiveScaleValue(0.67f)
+        val targetTranslationX = -screenWidth / 2f + getResponsiveValue(80f)
+        val targetScale = getResponsiveScaleValue(0.75f)
 
         startButton.animate()
             .translationX(targetTranslationX)
@@ -254,8 +303,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun showStartButton() {
         val screenWidth = resources.displayMetrics.widthPixels
-        val initialTranslationX = -screenWidth / 2f + getResponsiveValue(96f)
-        val initialScale = getResponsiveScaleValue(0.67f)
+        val initialTranslationX = -screenWidth / 2f + getResponsiveValue(80f)
+        val initialScale = getResponsiveScaleValue(0.75f)
 
         startButton.apply {
             visibility = View.VISIBLE
@@ -295,53 +344,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun showSocialDialog() {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_socials, null)
-        val dialog = AlertDialog.Builder(this)
-            .setView(dialogView)
-            .create()
-
-        dialog.setOnShowListener {
-            val window = dialog.window
-            val displayMetrics = resources.displayMetrics
-            val screenWidthDp = displayMetrics.widthPixels / displayMetrics.density
-
-            val dialogWidth = when {
-                screenWidthDp >= 720 -> (displayMetrics.widthPixels * 0.6).toInt()
-                screenWidthDp >= 600 -> (displayMetrics.widthPixels * 0.7).toInt()
-                else -> (displayMetrics.widthPixels * 0.9).toInt()
-            }
-
-            window?.setLayout(dialogWidth, LinearLayout.LayoutParams.WRAP_CONTENT)
-        }
-
-        dialogView.findViewById<ImageView>(R.id.instagram).setOnClickListener {
-            val url = "https://www.instagram.com/radio_teateonair"
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-            dialog.dismiss()
-        }
-
-        dialogView.findViewById<ImageView>(R.id.facebook).setOnClickListener {
-            val url = "https://www.facebook.com/radioteateonair/"
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-            dialog.dismiss()
-        }
-
-        dialogView.findViewById<ImageView>(R.id.youtube).setOnClickListener {
-            val url = "https://www.youtube.com/@radioteateonair4409"
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-            dialog.dismiss()
-        }
-
-        dialogView.findViewById<ImageView>(R.id.tiktok).setOnClickListener {
-            val url = "https://www.tiktok.com/@radioteateonair"
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-            dialog.dismiss()
-        }
-
-        dialog.show()
-    }
-
     private fun startSongInfoUpdater() {
         val jsonUrl = "https://nr14.newradio.it:8663/status-json.xsl"
 
@@ -374,7 +376,10 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
                     } finally {
-                        handler.postDelayed(this, 2000)
+                        // Only continue updating if still playing
+                        if (isPlaying) {
+                            handler.postDelayed(this, 2000)
+                        }
                     }
                 }
             }
@@ -410,12 +415,13 @@ class MainActivity : AppCompatActivity() {
         val availableWidth = getAvailableTextWidth()
         if (availableWidth <= 0) return
 
-        adjustTextSize(artistName, availableWidth, 10f, 18f)
-        adjustTextSize(songTitle, availableWidth, 12f, 20f)
+        // REDUCED FONT SIZES for smaller player bar
+        adjustTextSize(artistName, availableWidth, 8f, 12f)  // Reduced from 10f-18f
+        adjustTextSize(songTitle, availableWidth, 9f, 14f)   // Reduced from 12f-20f
     }
 
     private fun getAvailableTextWidth(): Int {
-        val playButtonWidth = resources.getDimensionPixelSize(R.dimen.play_button_size)
+        val playButtonWidth = 48 * resources.displayMetrics.density.toInt() // Updated button size
         val padding = resources.getDimensionPixelSize(R.dimen.song_info_padding) * 2
         val margins = resources.getDimensionPixelSize(R.dimen.bottom_bar_padding) * 2
 
@@ -600,17 +606,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun showToast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        if (isPlaying) {
-            val intent = Intent(this, RadioService::class.java).apply {
-                action = RadioService.ACTION_STOP
-            }
-            startService(intent)
-        }
-        executor.shutdown()
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {

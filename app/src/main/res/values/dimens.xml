@@ -23,30 +23,32 @@
     <dimen name="box_container_width">200dp</dimen>
     <dimen name="box_container_height">200dp</dimen>
 
-    <!-- Player bar dimensions -->
+    <!-- Player bar dimensions - REDUCED SIZES -->
     <dimen name="player_bar_height">80dp</dimen>
     <dimen name="player_bar_margin_bottom">16dp</dimen>
 
-    <!-- Button dimensions -->
-    <dimen name="start_button_size">64dp</dimen>
+    <!-- Button dimensions - REDUCED SIZES -->
+    <dimen name="start_button_size">60dp</dimen>
     <dimen name="start_button_text_size">24sp</dimen>
     <dimen name="play_button_size">48dp</dimen>
-    <dimen name="play_button_text_size">20sp</dimen>
+    <dimen name="play_button_text_size">18sp</dimen>
 
-    <!-- Text dimensions -->
-    <dimen name="song_title_text_size">14sp</dimen>
-    <dimen name="artist_name_text_size">12sp</dimen>
+    <!-- Text dimensions - REDUCED FONT SIZES -->
+    <dimen name="song_title_text_size">12sp</dimen>
+    <dimen name="artist_name_text_size">10sp</dimen>
     <dimen name="artist_name_margin_top">2dp</dimen>
 
-    <!-- Padding dimensions -->
-    <dimen name="bottom_bar_padding">12dp</dimen>
-    <dimen name="song_info_padding">12dp</dimen>
+    <!-- Padding dimensions - REDUCED PADDING -->
+    <dimen name="bottom_bar_padding">10dp</dimen>
+    <dimen name="song_info_padding">10dp</dimen>
 
     <!-- Dialog dimensions -->
     <dimen name="dialog_padding">20dp</dimen>
     <dimen name="dialog_title_text_size">18sp</dimen>
     <dimen name="dialog_title_margin_bottom">16dp</dimen>
-    <dimen name="social_icon_size">56dp</dimen>
+
+    <!-- Social icon dimensions - SMALLER ICONS -->
+    <dimen name="social_icon_size">30dp</dimen>
     <dimen name="social_icon_margin">8dp</dimen>
-    <dimen name="social_icon_padding">12dp</dimen>
+    <dimen name="social_icon_padding">0dp</dimen>
 </resources>

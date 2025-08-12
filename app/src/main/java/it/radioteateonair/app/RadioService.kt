@@ -16,6 +16,7 @@ import android.os.Handler
 import android.os.Looper
 import androidx.core.app.NotificationCompat
 import androidx.media.app.NotificationCompat as MediaNotificationCompat
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import org.json.JSONObject
 import java.net.URL
 import java.util.concurrent.Executors
@@ -220,7 +221,7 @@ class RadioService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_PLAY -> playStream()
-            ACTION_PAUSE -> pauseStream()
+            ACTION_PAUSE -> stopStream() // Treat pause as stop for radio streaming
             ACTION_STOP -> stopStream()
         }
 
@@ -236,6 +237,11 @@ class RadioService : Service() {
                     mediaPlayer.prepareAsync()
                 }
                 isPlaying = true
+
+                // SEND BROADCAST TO NOTIFY MAINACTIVITY THAT AUDIO STARTED
+                val broadcastIntent = Intent(MainActivity.ACTION_AUDIO_STARTED)
+                LocalBroadcastManager.getInstance(this).sendBroadcast(broadcastIntent)
+
                 updateNotification()
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -244,17 +250,8 @@ class RadioService : Service() {
     }
 
     private fun pauseStream() {
-        if (isPlaying) {
-            try {
-                if (mediaPlayer.isPlaying) {
-                    mediaPlayer.pause()
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-            isPlaying = false
-            updateNotification()
-        }
+        // For radio streaming, pause = stop
+        stopStream()
     }
 
     private fun stopStream() {
@@ -270,6 +267,10 @@ class RadioService : Service() {
         } catch (e: Exception) {
             e.printStackTrace()
         }
+
+        // SEND BROADCAST TO NOTIFY MAINACTIVITY THAT AUDIO WAS STOPPED
+        val broadcastIntent = Intent(MainActivity.ACTION_AUDIO_STOPPED)
+        LocalBroadcastManager.getInstance(this).sendBroadcast(broadcastIntent)
 
         updateNotification()
         stopSelf()
