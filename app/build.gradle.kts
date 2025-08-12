@@ -11,8 +11,8 @@ android {
         applicationId = "it.radioteateonair.app"
         minSdk = 33
         targetSdk = 35
-        versionCode = 9
-        versionName = "RTOA 9"
+        versionCode = 11
+        versionName = "RTOA 11"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -45,6 +45,7 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.jsoup)
+    implementation("androidx.media:media:1.6.0")
 
     // Media session and notification support
     implementation("androidx.media:media:1.7.0")

@@ -49,4 +49,12 @@
     <dimen name="social_icon_size">72dp</dimen>
     <dimen name="social_icon_margin">12dp</dimen>
     <dimen name="social_icon_padding">16dp</dimen>
+
+    <!-- Social Media Box dimensions -->
+    <dimen name="social_box_width">220dp</dimen>
+    <dimen name="social_box_height">140dp</dimen>
+    <dimen name="social_box_margin_top">20dp</dimen>
+    <dimen name="social_media_icon_size">40dp</dimen>
+    <dimen name="social_media_icon_margin">10dp</dimen>
+    <dimen name="social_media_icon_padding">8dp</dimen>
 </resources>

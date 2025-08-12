@@ -2,33 +2,39 @@ package it.radioteateonair.app
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.content.res.Configuration
+import android.graphics.Paint
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.text.TextUtils
+import android.util.DisplayMetrics
 import android.view.View
+import android.view.ViewTreeObserver
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import org.jsoup.Jsoup
-import java.util.*
-import android.net.Uri
-import android.widget.ImageView
-import org.json.JSONObject
-import java.net.URL
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
-import androidx.core.view.updatePadding
-import android.util.DisplayMetrics
-import android.content.res.Configuration
-import android.text.TextUtils
-import android.graphics.Paint
-import android.view.ViewTreeObserver
-
+import org.json.JSONObject
+import org.jsoup.Jsoup
+import java.net.URL
+import java.util.*
+import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
+
+    companion object {
+        private const val NOTIFICATION_PERMISSION_REQUEST_CODE = 1001
+    }
 
     private lateinit var startButton: Button
     private lateinit var playButton: Button
@@ -38,22 +44,18 @@ class MainActivity : AppCompatActivity() {
     private lateinit var handler: Handler
     private lateinit var topInsetSpacer: View
     private lateinit var bottomInsetSpacer: View
-    private val executor = java.util.concurrent.Executors.newSingleThreadExecutor()
+    private val executor = Executors.newSingleThreadExecutor()
 
     private var isPlaying = false
-    private var isFirstLoad = true // Track if this is the first metadata load
+    private var isFirstLoad = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Initialize views
         initializeViews()
-
-        // Setup system UI handling
         setupSystemUI()
-
-        // Setup click listeners
+        requestNotificationPermission()
         setupClickListeners()
 
         handler = Handler(Looper.getMainLooper())
@@ -68,18 +70,14 @@ class MainActivity : AppCompatActivity() {
         topInsetSpacer = findViewById(R.id.topInsetSpacer)
         bottomInsetSpacer = findViewById(R.id.bottomInsetSpacer)
 
-        // Setup layout listener for text size adjustments
         bottomBar.viewTreeObserver.addOnGlobalLayoutListener {
             if (bottomBar.width > 0 && isPlaying) {
                 adjustTextSizes()
             }
         }
-
-        // The AnimatedBackgroundView will start automatically when attached to window
     }
 
     private fun setupSystemUI() {
-        // Handle system UI insets for proper spacing
         ViewCompat.setOnApplyWindowInsetsListener(topInsetSpacer) { view, insets ->
             val statusBarHeight = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
             view.updateLayoutParams<androidx.constraintlayout.widget.ConstraintLayout.LayoutParams> {
@@ -96,7 +94,6 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        // Enable edge-to-edge display
         window.statusBarColor = android.graphics.Color.TRANSPARENT
         window.navigationBarColor = android.graphics.Color.TRANSPARENT
     }
@@ -104,20 +101,23 @@ class MainActivity : AppCompatActivity() {
     private fun setupClickListeners() {
         startButton.setOnClickListener {
             if (!isPlaying) {
-                startService(Intent(this, RadioService::class.java))
-                isPlaying = true
-                animateToPlayingState()
-                startSongInfoUpdater()
+                if (hasNotificationPermission()) {
+                    startRadioService()
+                } else {
+                    requestNotificationPermission()
+                }
             }
         }
 
         playButton.setOnClickListener {
-            stopService(Intent(this, RadioService::class.java))
+            val intent = Intent(this, RadioService::class.java).apply {
+                action = RadioService.ACTION_STOP
+            }
+            startService(intent)
             isPlaying = false
             animateToStoppedState()
         }
 
-        // Box click listeners with responsive behavior
         findViewById<View>(R.id.box1).setOnClickListener {
             showPopupWithWebView("https://radioteateonair.it/palinsesto")
         }
@@ -132,8 +132,81 @@ class MainActivity : AppCompatActivity() {
             startActivity(urlIntent)
         }
 
-        findViewById<View>(R.id.box4).setOnClickListener {
-            showSocialDialog()
+
+        // Social Media Box click listeners
+        findViewById<View>(R.id.socialFacebook).setOnClickListener {
+            val url = "https://www.facebook.com/radioteateonair/"
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        }
+
+        findViewById<View>(R.id.socialInstagram).setOnClickListener {
+            val url = "https://www.instagram.com/radio_teateonair"
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        }
+
+        findViewById<View>(R.id.socialTikTok).setOnClickListener {
+            val url = "https://www.tiktok.com/@radioteateonair"
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        }
+
+        findViewById<View>(R.id.socialYouTube).setOnClickListener {
+            val url = "https://www.youtube.com/@radioteateonair4409"
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        }
+    }
+
+    private fun startRadioService() {
+        val intent = Intent(this, RadioService::class.java).apply {
+            action = RadioService.ACTION_PLAY
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+        isPlaying = true
+        animateToPlayingState()
+        startSongInfoUpdater()
+    }
+
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (!hasNotificationPermission()) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                    NOTIFICATION_PERMISSION_REQUEST_CODE
+                )
+            }
+        }
+    }
+
+    private fun hasNotificationPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (requestCode == NOTIFICATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (!isPlaying) {
+                    showToast("Notifiche abilitate! Ora puoi avviare la radio.")
+                }
+            } else {
+                showToast("Le notifiche sono necessarie per controllare la radio dalla barra delle notifiche")
+            }
         }
     }
 
@@ -172,7 +245,6 @@ class MainActivity : AppCompatActivity() {
             .alpha(1f)
             .setDuration(200)
             .withEndAction {
-                // Ensure text sizing happens after layout is complete
                 bottomBar.post {
                     adjustTextSizes()
                 }
@@ -206,9 +278,9 @@ class MainActivity : AppCompatActivity() {
         val screenWidthDp = displayMetrics.widthPixels / displayMetrics.density
 
         return when {
-            screenWidthDp >= 720 -> baseValue * 1.5f  // Large tablets
-            screenWidthDp >= 600 -> baseValue * 1.2f  // Tablets
-            else -> baseValue  // Phones
+            screenWidthDp >= 720 -> baseValue * 1.5f
+            screenWidthDp >= 600 -> baseValue * 1.2f
+            else -> baseValue
         }
     }
 
@@ -217,9 +289,9 @@ class MainActivity : AppCompatActivity() {
         val screenWidthDp = displayMetrics.widthPixels / displayMetrics.density
 
         return when {
-            screenWidthDp >= 720 -> baseScale * 0.8f  // Large tablets - less scaling
-            screenWidthDp >= 600 -> baseScale * 0.9f  // Tablets - moderate scaling
-            else -> baseScale  // Phones - original scaling
+            screenWidthDp >= 720 -> baseScale * 0.8f
+            screenWidthDp >= 600 -> baseScale * 0.9f
+            else -> baseScale
         }
     }
 
@@ -229,16 +301,15 @@ class MainActivity : AppCompatActivity() {
             .setView(dialogView)
             .create()
 
-        // Make dialog responsive
         dialog.setOnShowListener {
             val window = dialog.window
             val displayMetrics = resources.displayMetrics
             val screenWidthDp = displayMetrics.widthPixels / displayMetrics.density
 
             val dialogWidth = when {
-                screenWidthDp >= 720 -> (displayMetrics.widthPixels * 0.6).toInt()  // 60% on large tablets
-                screenWidthDp >= 600 -> (displayMetrics.widthPixels * 0.7).toInt()  // 70% on tablets
-                else -> (displayMetrics.widthPixels * 0.9).toInt()  // 90% on phones
+                screenWidthDp >= 720 -> (displayMetrics.widthPixels * 0.6).toInt()
+                screenWidthDp >= 600 -> (displayMetrics.widthPixels * 0.7).toInt()
+                else -> (displayMetrics.widthPixels * 0.9).toInt()
             }
 
             window?.setLayout(dialogWidth, LinearLayout.LayoutParams.WRAP_CONTENT)
@@ -291,21 +362,19 @@ class MainActivity : AppCompatActivity() {
 
                         handler.post {
                             updateSongInfo(artist, song)
-                            isFirstLoad = false // Mark that we've loaded at least once
+                            isFirstLoad = false
                         }
                     } catch (e: Exception) {
                         e.printStackTrace()
                         handler.post {
-                            // Only show loading on first load, not on subsequent failures
                             if (isFirstLoad) {
                                 artistName.text = getString(R.string.loading)
                                 songTitle.text = ""
                                 adjustTextSizes()
                             }
-                            // If it's not the first load, keep the previous song info displayed
                         }
                     } finally {
-                        handler.postDelayed(this, 10000)
+                        handler.postDelayed(this, 2000)
                     }
                 }
             }
@@ -315,27 +384,22 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateSongInfo(artist: String, song: String) {
-        // Update the text
         artistName.text = artist
         songTitle.text = song
 
-        // Enable marquee for title if it's long
         setupMarqueeForTitle()
-
-        // Adjust text sizes based on content length
         adjustTextSizes()
     }
 
     private fun setupMarqueeForTitle() {
         songTitle.apply {
             ellipsize = TextUtils.TruncateAt.MARQUEE
-            marqueeRepeatLimit = -1 // Infinite marquee
+            marqueeRepeatLimit = -1
             isSingleLine = true
-            isSelected = true // Required for marquee to work
+            isSelected = true
             isFocusable = true
             isFocusableInTouchMode = true
 
-            // Start marquee after a short delay
             post {
                 requestFocus()
             }
@@ -343,14 +407,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun adjustTextSizes() {
-        // Get the available width for text
         val availableWidth = getAvailableTextWidth()
         if (availableWidth <= 0) return
 
-        // Adjust artist name size
         adjustTextSize(artistName, availableWidth, 10f, 18f)
-
-        // Adjust song title size
         adjustTextSize(songTitle, availableWidth, 12f, 20f)
     }
 
@@ -359,7 +419,7 @@ class MainActivity : AppCompatActivity() {
         val padding = resources.getDimensionPixelSize(R.dimen.song_info_padding) * 2
         val margins = resources.getDimensionPixelSize(R.dimen.bottom_bar_padding) * 2
 
-        return bottomBar.width - playButtonWidth - padding - margins - 100 // Extra margin for safety
+        return bottomBar.width - playButtonWidth - padding - margins - 100
     }
 
     private fun adjustTextSize(textView: TextView, availableWidth: Int, minSize: Float, maxSize: Float) {
@@ -371,9 +431,7 @@ class MainActivity : AppCompatActivity() {
         var currentSize = maxSize
         val text = textView.text.toString()
 
-        // For marquee text (song title), we don't need to fit in width
         if (textView == songTitle) {
-            // Use content-based sizing for song title
             when {
                 text.length <= 20 -> currentSize = maxSize
                 text.length <= 35 -> currentSize = maxSize * 0.9f
@@ -381,7 +439,6 @@ class MainActivity : AppCompatActivity() {
                 else -> currentSize = maxSize * 0.7f
             }
         } else {
-            // For artist name, fit to available width
             paint.textSize = currentSize * resources.displayMetrics.scaledDensity
 
             while (currentSize > minSize && paint.measureText(text) > availableWidth) {
@@ -390,7 +447,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Apply size with smooth transition
         textView.animate()
             .scaleX(1f)
             .scaleY(1f)
@@ -414,7 +470,6 @@ class MainActivity : AppCompatActivity() {
             .setNegativeButton(getString(R.string.close)) { dialog, _ -> dialog.dismiss() }
             .create()
 
-        // Make WebView dialog responsive
         dialog.setOnShowListener {
             val window = dialog.window
             val displayMetrics = resources.displayMetrics
@@ -422,14 +477,14 @@ class MainActivity : AppCompatActivity() {
             val screenHeightDp = displayMetrics.heightPixels / displayMetrics.density
 
             val dialogWidth = when {
-                screenWidthDp >= 720 -> (displayMetrics.widthPixels * 0.8).toInt()  // 80% on large tablets
-                screenWidthDp >= 600 -> (displayMetrics.widthPixels * 0.85).toInt() // 85% on tablets
-                else -> (displayMetrics.widthPixels * 0.95).toInt() // 95% on phones
+                screenWidthDp >= 720 -> (displayMetrics.widthPixels * 0.8).toInt()
+                screenWidthDp >= 600 -> (displayMetrics.widthPixels * 0.85).toInt()
+                else -> (displayMetrics.widthPixels * 0.95).toInt()
             }
 
             val dialogHeight = when {
-                screenHeightDp >= 800 -> (displayMetrics.heightPixels * 0.8).toInt() // 80% on tall screens
-                else -> (displayMetrics.heightPixels * 0.85).toInt() // 85% on normal screens
+                screenHeightDp >= 800 -> (displayMetrics.heightPixels * 0.8).toInt()
+                else -> (displayMetrics.heightPixels * 0.85).toInt()
             }
 
             window?.setLayout(dialogWidth, dialogHeight)
@@ -475,7 +530,6 @@ class MainActivity : AppCompatActivity() {
                     """<link rel="stylesheet" href="${it.absUrl("href")}">"""
                 }
 
-                // Create responsive HTML with better mobile optimization
                 val fullHtml = """
                     <html>
                         <head>
@@ -551,18 +605,19 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         if (isPlaying) {
-            stopService(Intent(this, RadioService::class.java))
+            val intent = Intent(this, RadioService::class.java).apply {
+                action = RadioService.ACTION_STOP
+            }
+            startService(intent)
         }
         executor.shutdown()
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        // Handle orientation changes gracefully
         if (isPlaying) {
-            // Refresh the layout if needed
             handler.postDelayed({
-                // Minor delay to ensure layout is settled
+                // Refresh layout after orientation change
             }, 100)
         }
     }

@@ -15,6 +15,7 @@ import android.os.IBinder
 import android.os.Handler
 import android.os.Looper
 import androidx.core.app.NotificationCompat
+import androidx.media.app.NotificationCompat as MediaNotificationCompat
 import org.json.JSONObject
 import java.net.URL
 import java.util.concurrent.Executors
@@ -33,10 +34,12 @@ class RadioService : Service() {
     private lateinit var notificationManager: NotificationManager
     private val executor = Executors.newSingleThreadExecutor()
     private val handler = Handler(Looper.getMainLooper())
+    private var metadataUpdateRunnable: Runnable? = null
 
     private var currentArtist = "Radio Teate OnAir"
     private var currentTitle = "In ascolto..."
     private var isPlaying = false
+    private var isServiceDestroyed = false
 
     override fun onCreate() {
         super.onCreate()
@@ -85,13 +88,15 @@ class RadioService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val serviceChannel = NotificationChannel(
                 CHANNEL_ID,
-                "Radio Streaming",
-                NotificationManager.IMPORTANCE_LOW
+                "Radio Teate OnAir",
+                NotificationManager.IMPORTANCE_LOW // Use LOW to avoid sound but still show
             ).apply {
-                description = "Controlli per Radio Teate OnAir"
-                setShowBadge(false)
+                description = "Controlli per la riproduzione di Radio Teate OnAir"
+                setShowBadge(true)
                 enableLights(false)
                 enableVibration(false)
+                setSound(null, null)
+                lockscreenVisibility = Notification.VISIBILITY_PUBLIC
             }
             notificationManager.createNotificationChannel(serviceChannel)
         }
@@ -112,12 +117,6 @@ class RadioService : Service() {
             ).build()
         }
 
-        val stopAction = NotificationCompat.Action.Builder(
-            android.R.drawable.ic_menu_close_clear_cancel,
-            "Stop",
-            createPendingIntent(ACTION_STOP)
-        ).build()
-
         // Create intent to open main activity when notification is tapped
         val mainActivityIntent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -127,30 +126,29 @@ class RadioService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle(currentTitle)
-            .setContentText(currentArtist)
-            .setSmallIcon(R.drawable.ic_radio_notification)
-            .setLargeIcon(createLargeIcon())
+        // Create a media-style notification with MediaStyle for ongoing audio stream
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle(if (isPlaying) currentTitle else "Radio Teate OnAir")
+            .setContentText(if (isPlaying) currentArtist else "Tocca per avviare")
+            .setSmallIcon(android.R.drawable.ic_media_play) // Use system media icon for better recognition
+            // Removed setLargeIcon() to hide the image as requested
             .setContentIntent(mainActivityPendingIntent)
             .setDeleteIntent(createPendingIntent(ACTION_STOP))
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setOngoing(isPlaying)
+            .setPriority(NotificationCompat.PRIORITY_LOW) // LOW priority but still visible
+            .setCategory(NotificationCompat.CATEGORY_TRANSPORT) // Identify as media transport
             .setShowWhen(false)
-            .addAction(playPauseAction)
-            .addAction(stopAction)
+            .addAction(playPauseAction) // Only pause/play button, no stop button
+            .setStyle(MediaNotificationCompat.MediaStyle()
+                .setShowActionsInCompactView(0) // Show the play/pause button in compact view
+                .setMediaSession(null) // No media session for simple streaming
+            )
+            .setOngoing(isPlaying) // Make it persistent while playing
+            .setAutoCancel(false) // Don't auto-cancel when tapped
+            .setColor(0xFF008000.toInt()) // Green color for the notification accent
             .build()
-    }
 
-    private fun createLargeIcon(): Bitmap? {
-        return try {
-            BitmapFactory.decodeResource(resources, R.drawable.logo_toa)?.let { bitmap ->
-                Bitmap.createScaledBitmap(bitmap, 256, 256, false)
-            }
-        } catch (e: Exception) {
-            null
-        }
+        return notification
     }
 
     private fun createPendingIntent(action: String): PendingIntent {
@@ -166,9 +164,19 @@ class RadioService : Service() {
     private fun startMetadataUpdater() {
         val jsonUrl = "https://nr14.newradio.it:8663/status-json.xsl"
 
-        val updateTask = object : Runnable {
+        metadataUpdateRunnable = object : Runnable {
             override fun run() {
+                // Check if service is destroyed or executor is shut down
+                if (isServiceDestroyed || executor.isShutdown) {
+                    return
+                }
+
                 executor.execute {
+                    // Double check inside executor
+                    if (isServiceDestroyed || executor.isShutdown) {
+                        return@execute
+                    }
+
                     try {
                         val response = URL(jsonUrl).readText()
                         val json = JSONObject(response)
@@ -182,7 +190,7 @@ class RadioService : Service() {
                         val song = parts.getOrNull(1)?.trim() ?: "Titolo Sconosciuto"
 
                         handler.post {
-                            if (currentArtist != artist || currentTitle != song) {
+                            if (!isServiceDestroyed && currentArtist != artist || currentTitle != song) {
                                 currentArtist = artist
                                 currentTitle = song
                                 updateNotification()
@@ -191,13 +199,16 @@ class RadioService : Service() {
                     } catch (e: Exception) {
                         e.printStackTrace()
                     } finally {
-                        handler.postDelayed(this, 5000)
+                        // Only reschedule if service is still active
+                        if (!isServiceDestroyed && !executor.isShutdown) {
+                            handler.postDelayed(this, 2000) // Update every 2 seconds instead of 5
+                        }
                     }
                 }
             }
         }
 
-        handler.post(updateTask)
+        metadataUpdateRunnable?.let { handler.post(it) }
     }
 
     private fun updateNotification() {
@@ -248,15 +259,44 @@ class RadioService : Service() {
 
     private fun stopStream() {
         isPlaying = false
-        mediaPlayer.stop()
+
+        // Stop metadata updates first
+        metadataUpdateRunnable?.let { handler.removeCallbacks(it) }
+
+        try {
+            if (::mediaPlayer.isInitialized) {
+                mediaPlayer.stop()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
         updateNotification()
         stopSelf()
     }
 
     override fun onDestroy() {
-        mediaPlayer.stop()
-        mediaPlayer.release()
-        executor.shutdown()
+        isServiceDestroyed = true
+
+        // Remove all pending callbacks
+        metadataUpdateRunnable?.let { handler.removeCallbacks(it) }
+
+        try {
+            if (::mediaPlayer.isInitialized) {
+                mediaPlayer.stop()
+                mediaPlayer.release()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        // Shutdown executor last
+        try {
+            executor.shutdown()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
         super.onDestroy()
     }
 
