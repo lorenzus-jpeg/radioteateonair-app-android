@@ -88,8 +88,22 @@ class MainActivity : AppCompatActivity() {
         requestNotificationPermission()
         setupClickListeners()
         registerRadioStateReceiver()
+        // REMOVED: createPersistentNotification() - Don't create notification on app start
 
         handler = Handler(Looper.getMainLooper())
+    }
+
+    private fun createPersistentNotification() {
+        // Create the persistent notification only when user first interacts
+        if (hasNotificationPermission()) {
+            val intent = Intent(this, RadioService::class.java)
+            // Don't specify an action, just start the service to show notification
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent)
+            } else {
+                startService(intent)
+            }
+        }
     }
 
     private fun registerRadioStateReceiver() {
@@ -205,6 +219,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startRadioService() {
+        // Create persistent notification on first play
+        if (hasNotificationPermission()) {
+            createPersistentNotification()
+        }
+
         val intent = Intent(this, RadioService::class.java).apply {
             action = RadioService.ACTION_PLAY
         }
@@ -250,9 +269,8 @@ class MainActivity : AppCompatActivity() {
 
         if (requestCode == NOTIFICATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                if (!isPlaying) {
-                    showToast("Notifiche abilitate! Ora puoi avviare la radio.")
-                }
+                showToast("Notifiche abilitate! Tocca play per iniziare.")
+                // DON'T auto-create notification when permission is granted
             } else {
                 showToast("Le notifiche sono necessarie per controllare la radio dalla barra delle notifiche")
             }
@@ -392,14 +410,33 @@ class MainActivity : AppCompatActivity() {
         artistName.text = artist
         songTitle.text = song
 
-        setupMarqueeForTitle()
+        // Restart marquee for both fields when content updates
+        handler.postDelayed({
+            setupMarqueeForTitle()
+        }, 100) // Small delay to ensure text is set
+
         adjustTextSizes()
     }
 
     private fun setupMarqueeForTitle() {
+        // Setup marquee for song title
         songTitle.apply {
             ellipsize = TextUtils.TruncateAt.MARQUEE
-            marqueeRepeatLimit = -1
+            marqueeRepeatLimit = -1 // Infinite marquee
+            isSingleLine = true
+            isSelected = true
+            isFocusable = true
+            isFocusableInTouchMode = true
+
+            post {
+                requestFocus()
+            }
+        }
+
+        // Setup marquee for artist name as well
+        artistName.apply {
+            ellipsize = TextUtils.TruncateAt.MARQUEE
+            marqueeRepeatLimit = -1 // Infinite marquee
             isSingleLine = true
             isSelected = true
             isFocusable = true
@@ -469,14 +506,67 @@ class MainActivity : AppCompatActivity() {
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
         webView.settings.loadsImagesAutomatically = true
+        webView.settings.cacheMode = android.webkit.WebSettings.LOAD_CACHE_ELSE_NETWORK
         webView.webViewClient = WebViewClient()
 
+        // Create loading progress bar
+        val progressBar = ProgressBar(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = android.view.Gravity.CENTER
+                setMargins(0, 100, 0, 0)
+            }
+            indeterminateDrawable.setColorFilter(
+                0xFF00FF88.toInt(),
+                android.graphics.PorterDuff.Mode.SRC_IN
+            )
+        }
+
+        val loadingText = TextView(this).apply {
+            text = getString(R.string.loading)
+            textSize = 16f
+            setTextColor(0xFF00FF88.toInt())
+            gravity = android.view.Gravity.CENTER
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 20, 0, 0)
+            }
+        }
+
+        val loadingContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = android.view.Gravity.CENTER
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT
+            )
+            addView(progressBar)
+            addView(loadingText)
+        }
+
+        val mainContainer = FrameLayout(this).apply {
+            addView(loadingContainer)
+            addView(webView)
+        }
+
+        // Initially hide WebView and show loading
+        webView.visibility = View.GONE
+        loadingContainer.visibility = View.VISIBLE
+
         val dialog = AlertDialog.Builder(this)
-            .setView(webView)
+            .setView(mainContainer)
             .setNegativeButton(getString(R.string.close)) { dialog, _ -> dialog.dismiss() }
             .create()
 
+        // Style the close button to green
         dialog.setOnShowListener {
+            val button = dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
+            button?.setTextColor(0xFF00FF88.toInt())
+
             val window = dialog.window
             val displayMetrics = resources.displayMetrics
             val screenWidthDp = displayMetrics.widthPixels / displayMetrics.density
@@ -498,9 +588,15 @@ class MainActivity : AppCompatActivity() {
 
         dialog.show()
 
+        // Load content in background thread with faster timeout
         Thread {
             try {
-                val doc = Jsoup.connect(url).get()
+                // Set connection timeout for faster response
+                val connection = java.net.URL(url).openConnection()
+                connection.connectTimeout = 5000 // 5 seconds
+                connection.readTimeout = 10000 // 10 seconds
+
+                val doc = Jsoup.parse(connection.getInputStream(), "UTF-8", url)
 
                 val dayNames = listOf("Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato")
                 val todayIndex = Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 1
@@ -514,6 +610,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
+                // RESTORED ORIGINAL IMAGE HANDLING
                 filteredDivs.forEach { div ->
                     div.select(".qt-header-bg").forEach { bgDiv ->
                         val bgUrl = bgDiv.attr("data-bgimage")
@@ -536,6 +633,7 @@ class MainActivity : AppCompatActivity() {
                     """<link rel="stylesheet" href="${it.absUrl("href")}">"""
                 }
 
+                // RESTORED ORIGINAL HTML STRUCTURE
                 val fullHtml = """
                     <html>
                         <head>
@@ -588,12 +686,17 @@ class MainActivity : AppCompatActivity() {
                 """.trimIndent()
 
                 runOnUiThread {
+                    // Hide loading and show WebView
+                    loadingContainer.visibility = View.GONE
+                    webView.visibility = View.VISIBLE
                     webView.loadDataWithBaseURL(url, fullHtml, "text/html", "UTF-8", null)
                 }
 
             } catch (e: Exception) {
                 e.printStackTrace()
                 runOnUiThread {
+                    loadingContainer.visibility = View.GONE
+                    webView.visibility = View.VISIBLE
                     webView.loadData(
                         "<html><body style='padding:20px;font-family:sans-serif;'><h3>Errore di connessione</h3><p>Impossibile caricare il palinsesto. Verifica la connessione internet.</p></body></html>",
                         "text/html",

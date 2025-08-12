@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Place this file in res/values/strings.xml -->
 <resources>
     <string name="app_name">Radio Teate OnAir</string>
 
@@ -38,4 +39,28 @@
     <!-- Error messages -->
     <string name="connection_error">Errore di connessione</string>
     <string name="schedule_load_error">Impossibile caricare il palinsesto. Verifica la connessione internet.</string>
+
+    <!-- ADDITIONAL STRINGS NEEDED FOR ACCESSIBILITY FIXES -->
+
+    <!-- Navigation Labels -->
+    <string name="palinsesto">PALINSESTO</string>
+    <string name="palinsesto_podcast">PALINSESTO\nPODCAST\nODIERNO</string>
+    <string name="programmi">PROGRAMMI</string>
+    <string name="chi_siamo">CHI SIAMO</string>
+
+    <!-- Social Media Accessibility Descriptions -->
+    <string name="facebook_desc">Vai alla pagina Facebook di Radio Teate OnAir</string>
+    <string name="instagram_desc">Vai al profilo Instagram di Radio Teate OnAir</string>
+    <string name="tiktok_desc">Vai al profilo TikTok di Radio Teate OnAir</string>
+    <string name="youtube_desc">Vai al canale YouTube di Radio Teate OnAir</string>
+
+    <!-- Navigation Accessibility Descriptions -->
+    <string name="schedule_desc">Visualizza il palinsesto della radio</string>
+    <string name="programs_desc">Scopri i programmi della radio</string>
+    <string name="about_us_desc">Informazioni su Radio Teate OnAir</string>
+
+    <!-- Player Example Text -->
+    <string name="example_title">Caricamento...</string>
+    <string name="example_artist"></string>
+
 </resources>

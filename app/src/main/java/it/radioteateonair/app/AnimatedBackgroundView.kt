@@ -73,34 +73,14 @@ class AnimatedBackgroundView @JvmOverloads constructor(
     private fun updateGradient() {
         if (width <= 0 || height <= 0) return
 
-        // STATIC GRADIENT - NO ANIMATION
-        val colors = intArrayOf(
-            Color.rgb(0, 0, 0), // Pure black
-            Color.rgb(0, 32, 0), // Dark green
-            Color.rgb(0, 64, 0), // Medium green
-            Color.rgb(0, 128, 0)  // Bright green
-        )
-
-        val positions = floatArrayOf(0f, 0.3f, 0.7f, 1f)
-
-        gradient = LinearGradient(
-            0f, 0f, width.toFloat(), height.toFloat(),
-            colors, positions,
-            Shader.TileMode.CLAMP
-        )
+        // NO GRADIENT - completely transparent background to show image
+        gradient = null
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        updateGradient()
-
-        gradient?.let { grad ->
-            paint.shader = grad
-            canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
-        }
-
-        // Add HIGHER and MORE VISIBLE wave overlay
+        // Skip gradient drawing - only draw waves
         drawWaveOverlay(canvas)
     }
 

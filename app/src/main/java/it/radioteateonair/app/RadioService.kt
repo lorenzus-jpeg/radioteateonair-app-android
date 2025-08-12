@@ -27,6 +27,7 @@ class RadioService : Service() {
         const val ACTION_PLAY = "it.radioteateonair.app.ACTION_PLAY"
         const val ACTION_PAUSE = "it.radioteateonair.app.ACTION_PAUSE"
         const val ACTION_STOP = "it.radioteateonair.app.ACTION_STOP"
+        const val ACTION_CLOSE = "it.radioteateonair.app.ACTION_CLOSE"
         private const val NOTIFICATION_ID = 1
         private const val CHANNEL_ID = "radio_channel"
     }
@@ -47,8 +48,14 @@ class RadioService : Service() {
 
         setupMediaPlayer()
         setupNotificationManager()
-        startMetadataUpdater()
 
+        // DON'T start metadata updater or foreground service automatically
+        // Only start when explicitly requested via ACTION_PLAY
+    }
+
+    private fun startServiceProperly() {
+        // Start metadata updater and foreground service when actually needed
+        startMetadataUpdater()
         startForeground(NOTIFICATION_ID, createNotification())
     }
 
@@ -219,10 +226,20 @@ class RadioService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // Always start foreground service when any command is received
+        if (!isServiceDestroyed) {
+            startServiceProperly()
+        }
+
         when (intent?.action) {
             ACTION_PLAY -> playStream()
-            ACTION_PAUSE -> stopStream() // Treat pause as stop for radio streaming
-            ACTION_STOP -> stopStream()
+            ACTION_PAUSE -> stopStreamButKeepNotification() // Stop audio but keep notification
+            ACTION_STOP -> stopStreamButKeepNotification() // Stop audio but keep notification
+            ACTION_CLOSE -> closeNotificationAndService() // Close notification and service
+            else -> {
+                // If service is started without action, just show the notification (don't play)
+                updateNotification()
+            }
         }
 
         return START_STICKY
@@ -250,14 +267,39 @@ class RadioService : Service() {
     }
 
     private fun pauseStream() {
-        // For radio streaming, pause = stop
-        stopStream()
+        // For radio streaming, pause = stop audio but keep notification
+        stopStreamButKeepNotification()
     }
 
-    private fun stopStream() {
+    private fun stopStreamButKeepNotification() {
+        val wasPlaying = isPlaying
         isPlaying = false
 
-        // Stop metadata updates first
+        // Stop metadata updates
+        metadataUpdateRunnable?.let { handler.removeCallbacks(it) }
+
+        try {
+            if (::mediaPlayer.isInitialized && mediaPlayer.isPlaying) {
+                mediaPlayer.stop()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        // SEND BROADCAST TO NOTIFY MAINACTIVITY THAT AUDIO WAS STOPPED
+        if (wasPlaying) {
+            val broadcastIntent = Intent(MainActivity.ACTION_AUDIO_STOPPED)
+            LocalBroadcastManager.getInstance(this).sendBroadcast(broadcastIntent)
+        }
+
+        // Update notification to show play button, but keep it visible
+        updateNotification()
+    }
+
+    private fun closeNotificationAndService() {
+        isPlaying = false
+
+        // Stop metadata updates
         metadataUpdateRunnable?.let { handler.removeCallbacks(it) }
 
         try {
@@ -272,8 +314,14 @@ class RadioService : Service() {
         val broadcastIntent = Intent(MainActivity.ACTION_AUDIO_STOPPED)
         LocalBroadcastManager.getInstance(this).sendBroadcast(broadcastIntent)
 
-        updateNotification()
+        // Stop the service completely
+        stopForeground(true) // Remove notification
         stopSelf()
+    }
+
+    private fun stopStream() {
+        // This method is kept for backward compatibility but now just calls the new method
+        closeNotificationAndService()
     }
 
     override fun onDestroy() {
