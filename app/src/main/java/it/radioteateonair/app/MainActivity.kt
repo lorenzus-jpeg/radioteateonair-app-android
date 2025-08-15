@@ -116,12 +116,11 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         LocalBroadcastManager.getInstance(this).unregisterReceiver(radioStateReceiver)
-        if (isPlaying) {
-            val intent = Intent(this, RadioService::class.java).apply {
-                action = RadioService.ACTION_STOP
-            }
-            startService(intent)
-        }
+
+        // Always stop the service when app is closed
+        val intent = Intent(this, RadioService::class.java)
+        stopService(intent)
+
         executor.shutdown()
     }
 
@@ -219,11 +218,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startRadioService() {
-        // Create persistent notification on first play
-        if (hasNotificationPermission()) {
-            createPersistentNotification()
-        }
-
         val intent = Intent(this, RadioService::class.java).apply {
             action = RadioService.ACTION_PLAY
         }

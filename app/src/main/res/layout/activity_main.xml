@@ -13,7 +13,7 @@
         android:id="@+id/backgroundImage"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:src="@drawable/ic_rtoa_logo"
+        android:src="@drawable/ic_rtoa_background"
         android:scaleType="fitCenter"
         android:alpha="0.6"
         app:layout_constraintTop_toTopOf="parent"

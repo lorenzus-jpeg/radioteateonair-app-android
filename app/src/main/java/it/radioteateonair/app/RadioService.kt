@@ -6,8 +6,6 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.os.Build
@@ -292,7 +290,7 @@ class RadioService : Service() {
             LocalBroadcastManager.getInstance(this).sendBroadcast(broadcastIntent)
         }
 
-        // Update notification to show play button, but keep it visible
+        // Update notification to show play button
         updateNotification()
     }
 
@@ -314,8 +312,8 @@ class RadioService : Service() {
         val broadcastIntent = Intent(MainActivity.ACTION_AUDIO_STOPPED)
         LocalBroadcastManager.getInstance(this).sendBroadcast(broadcastIntent)
 
-        // Stop the service completely
-        stopForeground(true) // Remove notification
+        // Stop the service completely and remove notification
+        stopForeground(true)
         stopSelf()
     }
 

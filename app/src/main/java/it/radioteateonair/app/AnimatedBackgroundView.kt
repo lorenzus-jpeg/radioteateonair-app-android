@@ -89,17 +89,24 @@ class AnimatedBackgroundView @JvmOverloads constructor(
             style = Paint.Style.FILL
         }
 
+        // Responsive amplitude based on screen size
+        val amplitudeMultiplier = when {
+            width >= 1200 -> 1.2f // Larger waves for big tablets
+            width >= 800 -> 1.0f  // Normal waves for tablets
+            else -> 0.8f          // Smaller waves for phones
+        }
+
         // Draw MORE wave layers with HIGHER amplitudes and MORE VISIBILITY
-        drawWaveLayer(canvas, overlayPaint, 1, 0.25f, 0.008f, waveOffset1, Color.argb(60, 0, 180, 0))
-        drawWaveLayer(canvas, overlayPaint, 2, 0.22f, 0.012f, waveOffset2, Color.argb(45, 0, 150, 0))
-        drawWaveLayer(canvas, overlayPaint, 3, 0.28f, 0.006f, waveOffset3, Color.argb(55, 0, 200, 0))
-        drawWaveLayer(canvas, overlayPaint, 4, 0.20f, 0.015f, waveOffset4, Color.argb(40, 0, 120, 0))
-        drawWaveLayer(canvas, overlayPaint, 5, 0.24f, 0.009f, waveOffset5, Color.argb(65, 0, 160, 0))
-        drawWaveLayer(canvas, overlayPaint, 6, 0.26f, 0.011f, waveOffset6, Color.argb(50, 0, 140, 0))
-        drawWaveLayer(canvas, overlayPaint, 7, 0.23f, 0.007f, waveOffset7, Color.argb(58, 0, 190, 0))
-        drawWaveLayer(canvas, overlayPaint, 8, 0.21f, 0.014f, waveOffset8, Color.argb(42, 0, 110, 0))
-        drawWaveLayer(canvas, overlayPaint, 9, 0.27f, 0.010f, waveOffset9, Color.argb(62, 0, 170, 0))
-        drawWaveLayer(canvas, overlayPaint, 10, 0.19f, 0.013f, waveOffset10, Color.argb(38, 0, 130, 0))
+        drawWaveLayer(canvas, overlayPaint, 1, 0.25f * amplitudeMultiplier, 0.008f, waveOffset1, Color.argb(60, 0, 180, 0))
+        drawWaveLayer(canvas, overlayPaint, 2, 0.22f * amplitudeMultiplier, 0.012f, waveOffset2, Color.argb(45, 0, 150, 0))
+        drawWaveLayer(canvas, overlayPaint, 3, 0.28f * amplitudeMultiplier, 0.006f, waveOffset3, Color.argb(55, 0, 200, 0))
+        drawWaveLayer(canvas, overlayPaint, 4, 0.20f * amplitudeMultiplier, 0.015f, waveOffset4, Color.argb(40, 0, 120, 0))
+        drawWaveLayer(canvas, overlayPaint, 5, 0.24f * amplitudeMultiplier, 0.009f, waveOffset5, Color.argb(65, 0, 160, 0))
+        drawWaveLayer(canvas, overlayPaint, 6, 0.26f * amplitudeMultiplier, 0.011f, waveOffset6, Color.argb(50, 0, 140, 0))
+        drawWaveLayer(canvas, overlayPaint, 7, 0.23f * amplitudeMultiplier, 0.007f, waveOffset7, Color.argb(58, 0, 190, 0))
+        drawWaveLayer(canvas, overlayPaint, 8, 0.21f * amplitudeMultiplier, 0.014f, waveOffset8, Color.argb(42, 0, 110, 0))
+        drawWaveLayer(canvas, overlayPaint, 9, 0.27f * amplitudeMultiplier, 0.010f, waveOffset9, Color.argb(62, 0, 170, 0))
+        drawWaveLayer(canvas, overlayPaint, 10, 0.19f * amplitudeMultiplier, 0.013f, waveOffset10, Color.argb(38, 0, 130, 0))
     }
 
     private fun drawWaveLayer(
@@ -135,8 +142,15 @@ class AnimatedBackgroundView @JvmOverloads constructor(
 
         path.moveTo(0f, height.toFloat())
 
+        // Responsive step size for smoother waves on larger screens
+        val stepSize = when {
+            width >= 1200 -> 1 // Very smooth for large tablets
+            width >= 800 -> 2  // Smooth for tablets
+            else -> 3          // Standard for phones
+        }
+
         // Create wave with varying heights using continuous time
-        for (x in 0..width step 2) {
+        for (x in 0..width step stepSize) {
             // Use continuous time instead of phase for seamless animation
             val timePhase = currentTime * (0.5 + layerIndex * 0.15) // Different speeds per layer
 
