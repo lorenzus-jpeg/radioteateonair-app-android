@@ -1,25 +1,34 @@
 package it.radioteateonair.app
 
 import android.annotation.SuppressLint
+import android.app.Dialog
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import android.content.res.Configuration
-import android.graphics.Paint
+import android.graphics.*
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.RippleDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.text.TextUtils
+import android.view.Gravity
 import android.view.View
 import android.view.ViewTreeObserver
+import android.view.Window
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
+import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.*
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -39,6 +48,7 @@ class MainActivity : AppCompatActivity() {
         private const val NOTIFICATION_PERMISSION_REQUEST_CODE = 1001
         const val ACTION_AUDIO_STOPPED = "it.radioteateonair.app.AUDIO_STOPPED"
         const val ACTION_AUDIO_STARTED = "it.radioteateonair.app.AUDIO_STARTED"
+        private const val CLICK_DEBOUNCE_DELAY = 500L
     }
 
     private lateinit var startButton: Button
@@ -53,22 +63,23 @@ class MainActivity : AppCompatActivity() {
 
     private var isPlaying = false
     private var isFirstLoad = true
+    private var lastClickTime = 0L
+    private var isProcessingClick = false
 
-    // BroadcastReceiver to listen for service state changes
     private val radioStateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
                 ACTION_AUDIO_STOPPED -> {
-                    // Audio was stopped from notification or service
                     isPlaying = false
+                    isProcessingClick = false
                     runOnUiThread {
                         animateToStoppedState()
                     }
                 }
                 ACTION_AUDIO_STARTED -> {
-                    // Audio was started from notification
                     if (!isPlaying) {
                         isPlaying = true
+                        isProcessingClick = false
                         runOnUiThread {
                             animateToPlayingState()
                             startSongInfoUpdater()
@@ -88,22 +99,8 @@ class MainActivity : AppCompatActivity() {
         requestNotificationPermission()
         setupClickListeners()
         registerRadioStateReceiver()
-        // REMOVED: createPersistentNotification() - Don't create notification on app start
 
         handler = Handler(Looper.getMainLooper())
-    }
-
-    private fun createPersistentNotification() {
-        // Create the persistent notification only when user first interacts
-        if (hasNotificationPermission()) {
-            val intent = Intent(this, RadioService::class.java)
-            // Don't specify an action, just start the service to show notification
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForegroundService(intent)
-            } else {
-                startService(intent)
-            }
-        }
     }
 
     private fun registerRadioStateReceiver() {
@@ -117,7 +114,6 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         LocalBroadcastManager.getInstance(this).unregisterReceiver(radioStateReceiver)
 
-        // Always stop the service when app is closed
         val intent = Intent(this, RadioService::class.java)
         stopService(intent)
 
@@ -163,26 +159,15 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupClickListeners() {
         startButton.setOnClickListener {
-            if (!isPlaying) {
-                if (hasNotificationPermission()) {
-                    startRadioService()
-                } else {
-                    requestNotificationPermission()
-                }
-            }
+            handlePlayerClick()
         }
 
         playButton.setOnClickListener {
-            val intent = Intent(this, RadioService::class.java).apply {
-                action = RadioService.ACTION_STOP
-            }
-            startService(intent)
-            isPlaying = false
-            animateToStoppedState()
+            handlePlayerClick()
         }
 
         findViewById<View>(R.id.box1).setOnClickListener {
-            showPopupWithWebView("https://radioteateonair.it/palinsesto")
+            showImprovedPalinsestoModal("https://radioteateonair.it/palinsesto")
         }
 
         findViewById<View>(R.id.box2).setOnClickListener {
@@ -195,7 +180,6 @@ class MainActivity : AppCompatActivity() {
             startActivity(urlIntent)
         }
 
-        // UPDATED SOCIAL MEDIA URLs - VERIFIED AND CORRECTED
         findViewById<View>(R.id.socialFacebook).setOnClickListener {
             val url = "https://www.facebook.com/radioteateonair"
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
@@ -217,6 +201,32 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun handlePlayerClick() {
+        val currentTime = System.currentTimeMillis()
+
+        if (currentTime - lastClickTime < CLICK_DEBOUNCE_DELAY) {
+            return
+        }
+
+        if (isProcessingClick) {
+            return
+        }
+
+        lastClickTime = currentTime
+        isProcessingClick = true
+
+        if (!isPlaying) {
+            if (hasNotificationPermission()) {
+                startRadioService()
+            } else {
+                isProcessingClick = false
+                requestNotificationPermission()
+            }
+        } else {
+            stopRadioService()
+        }
+    }
+
     private fun startRadioService() {
         val intent = Intent(this, RadioService::class.java).apply {
             action = RadioService.ACTION_PLAY
@@ -229,6 +239,23 @@ class MainActivity : AppCompatActivity() {
         isPlaying = true
         animateToPlayingState()
         startSongInfoUpdater()
+
+        handler.postDelayed({
+            isProcessingClick = false
+        }, 300)
+    }
+
+    private fun stopRadioService() {
+        val intent = Intent(this, RadioService::class.java).apply {
+            action = RadioService.ACTION_STOP
+        }
+        startService(intent)
+        isPlaying = false
+        animateToStoppedState()
+
+        handler.postDelayed({
+            isProcessingClick = false
+        }, 300)
     }
 
     private fun requestNotificationPermission() {
@@ -264,7 +291,6 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == NOTIFICATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 showToast("Notifiche abilitate! Tocca play per iniziare.")
-                // DON'T auto-create notification when permission is granted
             } else {
                 showToast("Le notifiche sono necessarie per controllare la radio dalla barra delle notifiche")
             }
@@ -388,7 +414,6 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
                     } finally {
-                        // Only continue updating if still playing
                         if (isPlaying) {
                             handler.postDelayed(this, 2000)
                         }
@@ -404,19 +429,17 @@ class MainActivity : AppCompatActivity() {
         artistName.text = artist
         songTitle.text = song
 
-        // Restart marquee for both fields when content updates
         handler.postDelayed({
             setupMarqueeForTitle()
-        }, 100) // Small delay to ensure text is set
+        }, 100)
 
         adjustTextSizes()
     }
 
     private fun setupMarqueeForTitle() {
-        // Setup marquee for song title
         songTitle.apply {
             ellipsize = TextUtils.TruncateAt.MARQUEE
-            marqueeRepeatLimit = -1 // Infinite marquee
+            marqueeRepeatLimit = -1
             isSingleLine = true
             isSelected = true
             isFocusable = true
@@ -427,10 +450,9 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Setup marquee for artist name as well
         artistName.apply {
             ellipsize = TextUtils.TruncateAt.MARQUEE
-            marqueeRepeatLimit = -1 // Infinite marquee
+            marqueeRepeatLimit = -1
             isSingleLine = true
             isSelected = true
             isFocusable = true
@@ -446,13 +468,12 @@ class MainActivity : AppCompatActivity() {
         val availableWidth = getAvailableTextWidth()
         if (availableWidth <= 0) return
 
-        // REDUCED FONT SIZES for smaller player bar
-        adjustTextSize(artistName, availableWidth, 8f, 12f)  // Reduced from 10f-18f
-        adjustTextSize(songTitle, availableWidth, 9f, 14f)   // Reduced from 12f-20f
+        adjustTextSize(artistName, availableWidth, 8f, 12f)
+        adjustTextSize(songTitle, availableWidth, 9f, 14f)
     }
 
     private fun getAvailableTextWidth(): Int {
-        val playButtonWidth = 48 * resources.displayMetrics.density.toInt() // Updated button size
+        val playButtonWidth = 48 * resources.displayMetrics.density.toInt()
         val padding = resources.getDimensionPixelSize(R.dimen.song_info_padding) * 2
         val margins = resources.getDimensionPixelSize(R.dimen.bottom_bar_padding) * 2
 
@@ -495,103 +516,157 @@ class MainActivity : AppCompatActivity() {
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    private fun showPopupWithWebView(url: String) {
-        val webView = WebView(this)
-        webView.settings.javaScriptEnabled = true
-        webView.settings.domStorageEnabled = true
-        webView.settings.loadsImagesAutomatically = true
-        webView.settings.cacheMode = android.webkit.WebSettings.LOAD_CACHE_ELSE_NETWORK
-        webView.webViewClient = WebViewClient()
+    private fun showImprovedPalinsestoModal(url: String) {
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
 
-        // Create loading progress bar
+        val mainLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundColor(Color.parseColor("#1a1a1a"))
+            setPadding(0, 0, 0, 0)
+        }
+
+        val headerLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setBackgroundColor(Color.parseColor("#00FF88"))
+            setPadding(24, 16, 16, 16)
+            gravity = Gravity.CENTER_VERTICAL
+        }
+
+        val titleText = TextView(this).apply {
+            text = "Palinsesto Oggi"
+            textSize = 18f
+            setTextColor(Color.BLACK)
+            typeface = Typeface.DEFAULT_BOLD
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        }
+
+        val closeButton = ImageView(this).apply {
+            setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
+            layoutParams = LinearLayout.LayoutParams(48, 48)
+            setPadding(12, 12, 12, 12)
+            background = createRippleDrawable()
+            setOnClickListener { dialog.dismiss() }
+        }
+
+        headerLayout.addView(titleText)
+        headerLayout.addView(closeButton)
+
+        val progressLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            setPadding(24, 32, 24, 32)
+            setBackgroundColor(Color.parseColor("#1a1a1a"))
+        }
+
         val progressBar = ProgressBar(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                gravity = android.view.Gravity.CENTER
-                setMargins(0, 100, 0, 0)
-            }
-            indeterminateDrawable.setColorFilter(
-                0xFF00FF88.toInt(),
-                android.graphics.PorterDuff.Mode.SRC_IN
-            )
+            layoutParams = LinearLayout.LayoutParams(48, 48)
+            indeterminateDrawable.setColorFilter(Color.parseColor("#00FF88"), android.graphics.PorterDuff.Mode.SRC_IN)
         }
 
         val loadingText = TextView(this).apply {
-            text = getString(R.string.loading)
+            text = "Caricamento in corso..."
             textSize = 16f
-            setTextColor(0xFF00FF88.toInt())
-            gravity = android.view.Gravity.CENTER
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                setMargins(0, 20, 0, 0)
-            }
+            setTextColor(Color.parseColor("#00FF88"))
+            setPadding(24, 0, 0, 0)
         }
 
-        val loadingContainer = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = android.view.Gravity.CENTER
+        progressLayout.addView(progressBar)
+        progressLayout.addView(loadingText)
+
+        val webView = WebView(this).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.MATCH_PARENT
             )
-            addView(progressBar)
-            addView(loadingText)
+            setBackgroundColor(Color.WHITE)
+            visibility = View.GONE
+
+            settings.apply {
+                javaScriptEnabled = true
+                domStorageEnabled = true
+                cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
+                loadWithOverviewMode = true
+                useWideViewPort = true
+                builtInZoomControls = false
+                displayZoomControls = false
+                setSupportZoom(false)
+            }
         }
 
-        val mainContainer = FrameLayout(this).apply {
-            addView(loadingContainer)
-            addView(webView)
+        fun showErrorContent() {
+            val errorHtml = """
+                <html>
+                <body style='padding:40px; font-family:sans-serif; text-align:center; background:#f8f9fa;'>
+                    <div style='background:white; padding:32px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);'>
+                        <h3 style='color:#dc3545; margin-bottom:16px;'>⚠️ Errore di connessione</h3>
+                        <p style='color:#6c757d; margin-bottom:24px;'>Impossibile caricare il palinsesto. Controlla la connessione internet e riprova.</p>
+                        <button onclick='window.location.reload()' style='background:#00FF88; color:white; border:none; padding:12px 24px; border-radius:8px; font-size:14px; cursor:pointer;'>
+                            Riprova
+                        </button>
+                    </div>
+                </body>
+                </html>
+            """.trimIndent()
+
+            webView.loadData(errorHtml, "text/html", "UTF-8")
         }
 
-        // Initially hide WebView and show loading
-        webView.visibility = View.GONE
-        loadingContainer.visibility = View.VISIBLE
-
-        val dialog = AlertDialog.Builder(this)
-            .setView(mainContainer)
-            .setNegativeButton(getString(R.string.close)) { dialog, _ -> dialog.dismiss() }
-            .create()
-
-        // Style the close button to green
-        dialog.setOnShowListener {
-            val button = dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
-            button?.setTextColor(0xFF00FF88.toInt())
-
-            val window = dialog.window
-            val displayMetrics = resources.displayMetrics
-            val screenWidthDp = displayMetrics.widthPixels / displayMetrics.density
-            val screenHeightDp = displayMetrics.heightPixels / displayMetrics.density
-
-            val dialogWidth = when {
-                screenWidthDp >= 720 -> (displayMetrics.widthPixels * 0.8).toInt()
-                screenWidthDp >= 600 -> (displayMetrics.widthPixels * 0.85).toInt()
-                else -> (displayMetrics.widthPixels * 0.95).toInt()
+        webView.webViewClient = object : WebViewClient() {
+            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                super.onPageStarted(view, url, favicon)
+                progressLayout.visibility = View.VISIBLE
+                webView.visibility = View.GONE
             }
 
-            val dialogHeight = when {
-                screenHeightDp >= 800 -> (displayMetrics.heightPixels * 0.8).toInt()
-                else -> (displayMetrics.heightPixels * 0.85).toInt()
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                handler.postDelayed({
+                    progressLayout.visibility = View.GONE
+                    webView.visibility = View.VISIBLE
+                }, 300)
             }
 
-            window?.setLayout(dialogWidth, dialogHeight)
+            override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
+                super.onReceivedError(view, request, error)
+                showErrorContent()
+            }
+        }
+
+        mainLayout.addView(headerLayout)
+        mainLayout.addView(progressLayout)
+        mainLayout.addView(webView)
+
+        dialog.setContentView(mainLayout)
+
+        dialog.window?.let { window ->
+            window.setLayout(
+                (resources.displayMetrics.widthPixels * 0.95).toInt(),
+                (resources.displayMetrics.heightPixels * 0.80).toInt() // Reduced height to leave space below
+            )
+            window.setGravity(Gravity.CENTER)
+            window.setBackgroundDrawableResource(android.R.color.transparent)
+
+            val drawable = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = 16f * resources.displayMetrics.density
+                setColor(Color.parseColor("#1a1a1a"))
+            }
+            window.setBackgroundDrawable(drawable)
         }
 
         dialog.show()
 
-        // Load content in background thread with faster timeout
         Thread {
             try {
                 // Set connection timeout for faster response
                 val connection = java.net.URL(url).openConnection()
-                connection.connectTimeout = 5000 // 5 seconds
-                connection.readTimeout = 10000 // 10 seconds
+                connection.connectTimeout = 3000 // 3 seconds
+                connection.readTimeout = 5000 // 5 seconds
 
                 val doc = Jsoup.parse(connection.getInputStream(), "UTF-8", url)
 
+                // FIXED: Use proper UTF-8 encoded Italian day names
                 val dayNames = listOf("Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato")
                 val todayIndex = Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 1
                 val todayName = dayNames[todayIndex]
@@ -620,14 +695,14 @@ class MainActivity : AppCompatActivity() {
                 val finalContent = if (filteredDivs.isNotEmpty()) {
                     filteredDivs.joinToString("\n") { it.outerHtml() }
                 } else {
-                    "<p>${getString(R.string.no_programs_today, todayName)}</p>"
+                    "<p>Nessun programma rimasto per $todayName</p>"
                 }
 
                 val cssLinks = doc.select("link[rel=stylesheet]").joinToString("\n") {
                     """<link rel="stylesheet" href="${it.absUrl("href")}">"""
                 }
 
-                // RESTORED ORIGINAL HTML STRUCTURE
+                // RESTORED ORIGINAL HTML STRUCTURE with minor improvements
                 val fullHtml = """
                     <html>
                         <head>
@@ -680,25 +755,33 @@ class MainActivity : AppCompatActivity() {
                 """.trimIndent()
 
                 runOnUiThread {
-                    // Hide loading and show WebView
-                    loadingContainer.visibility = View.GONE
-                    webView.visibility = View.VISIBLE
-                    webView.loadDataWithBaseURL(url, fullHtml, "text/html", "UTF-8", null)
+                    if (dialog.isShowing) {
+                        webView.loadDataWithBaseURL(url, fullHtml, "text/html", "UTF-8", null)
+                    }
                 }
 
             } catch (e: Exception) {
                 e.printStackTrace()
                 runOnUiThread {
-                    loadingContainer.visibility = View.GONE
-                    webView.visibility = View.VISIBLE
-                    webView.loadData(
-                        "<html><body style='padding:20px;font-family:sans-serif;'><h3>Errore di connessione</h3><p>Impossibile caricare il palinsesto. Verifica la connessione internet.</p></body></html>",
-                        "text/html",
-                        "UTF-8"
-                    )
+                    if (dialog.isShowing) {
+                        showErrorContent()
+                    }
                 }
             }
         }.start()
+    }
+
+    private fun createRippleDrawable(): Drawable {
+        val rippleColor = Color.parseColor("#33000000")
+        val content = GradientDrawable().apply {
+            shape = GradientDrawable.OVAL
+            setColor(Color.TRANSPARENT)
+        }
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            RippleDrawable(ColorStateList.valueOf(rippleColor), content, null)
+        } else {
+            content
+        }
     }
 
     private fun showToast(message: String) {

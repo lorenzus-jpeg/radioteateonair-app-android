@@ -192,8 +192,8 @@ class RadioService : Service() {
                             .getString("yp_currently_playing")
 
                         val parts = fullTitle.split(" - ", limit = 2)
-                        val artist = parts.getOrNull(0)?.trim() ?: "Artista Sconosciuto"
-                        val song = parts.getOrNull(1)?.trim() ?: "Titolo Sconosciuto"
+                        val artist = parts.getOrNull(0)?.trim() ?: ""
+                        val song = parts.getOrNull(1)?.trim() ?: "In caricamento..."
 
                         handler.post {
                             if (!isServiceDestroyed && currentArtist != artist || currentTitle != song) {
