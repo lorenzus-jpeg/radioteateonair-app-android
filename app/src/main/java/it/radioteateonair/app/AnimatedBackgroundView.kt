@@ -238,41 +238,46 @@ class AnimatedBackgroundView @JvmOverloads constructor(
         }
 
         // Create wave with varying heights using continuous time
-        for (x in 0..width step stepSize) {
-            // Use continuous time instead of phase for seamless animation
-            val timePhase = currentTime * (0.5 + layerIndex * 0.15) // Different speeds per layer
+        if (width > 0) {
+            for (x in 0..width step stepSize) {
+                // Use continuous time instead of phase for seamless animation
+                val timePhase = currentTime * (0.5 + layerIndex * 0.15) // Different speeds per layer
 
-            // Primary wave
-            val primaryWave = sin(frequency * x + timePhase).toFloat()
+                // Primary wave
+                val primaryWave = sin(frequency * x + timePhase).toFloat()
 
-            // Secondary wave for height variation
-            val heightVariation = sin(frequency * x * 2.5f + timePhase * 1.3).toFloat()
+                // Secondary wave for height variation
+                val heightVariation = sin(frequency * x * 2.5f + timePhase * 1.3).toFloat()
 
-            // Tertiary wave for micro-variations
-            val microVariation = sin(frequency * x * 4f + timePhase * 0.7).toFloat()
+                // Tertiary wave for micro-variations
+                val microVariation = sin(frequency * x * 4f + timePhase * 0.7).toFloat()
 
-            // Quaternary wave for extra complexity
-            val extraVariation = sin(frequency * x * 6f + timePhase * 0.4).toFloat()
+                // Quaternary wave for extra complexity
+                val extraVariation = sin(frequency * x * 6f + timePhase * 0.4).toFloat()
 
-            // Combine waves with different amplitudes - MORE PROMINENT
-            val combinedAmplitude = dynamicAmplitude * (
-                    primaryWave * 0.6f +
-                            heightVariation * 0.25f +
-                            microVariation * 0.1f +
-                            extraVariation * 0.05f
-                    )
+                // Combine waves with different amplitudes - MORE PROMINENT
+                val combinedAmplitude = dynamicAmplitude * (
+                        primaryWave * 0.6f +
+                                heightVariation * 0.25f +
+                                microVariation * 0.1f +
+                                extraVariation * 0.05f
+                        )
 
-            // Calculate wave peak heights that vary continuously
-            val peakHeightModifier = 1f + 0.6f * sin(frequency * x * 0.5f + timePhase * 0.3).toFloat()
-            val finalAmplitude = combinedAmplitude * peakHeightModifier
+                // Calculate wave peak heights that vary continuously
+                val peakHeightModifier = 1f + 0.6f * sin(frequency * x * 0.5f + timePhase * 0.3).toFloat()
+                val finalAmplitude = combinedAmplitude * peakHeightModifier
 
-            val y = baseHeight - finalAmplitude
+                val y = baseHeight - finalAmplitude
 
-            if (x == 0) {
-                path.moveTo(x.toFloat(), y)
-            } else {
-                path.lineTo(x.toFloat(), y)
+                if (x == 0) {
+                    path.moveTo(x.toFloat(), y)
+                } else {
+                    path.lineTo(x.toFloat(), y)
+                }
             }
+        } else {
+            // Fallback for zero width - create a simple vertical line
+            path.lineTo(0f, baseHeight)
         }
 
         // Close the path to fill the wave area

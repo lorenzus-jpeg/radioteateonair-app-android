@@ -22,7 +22,7 @@
     </path>
 
     <!-- Modern "T" with MUCH longer vertical line -->
-    <group android:translateX="54" android:translateY="52">
+    <group android:translateX="54" android:translateY="49">
         <!-- T shadow for depth -->
         <path
             android:pathData="M-15,-12 L17,-12 L17,-2 L6,-2 L6,28 L-4,28 L-4,-2 L-15,-2 Z"

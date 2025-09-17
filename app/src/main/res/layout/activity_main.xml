@@ -8,7 +8,17 @@
     android:background="#000000"
     android:fitsSystemWindows="true">
 
-    <!-- Background Image (bottom-most layer) - centered and half size -->
+    <!-- Animated background with waves ONLY (no gradient) - now behind logo -->
+    <it.radioteateonair.app.AnimatedBackgroundView
+        android:id="@+id/backgroundGradient"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Background Image (now on top of waves) - centered and half size -->
     <ImageView
         android:id="@+id/backgroundImage"
         android:layout_width="0dp"
@@ -22,16 +32,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintWidth_percent="0.5"
         app:layout_constraintHeight_percent="0.35" />
-
-    <!-- Animated background with waves ONLY (no gradient) -->
-    <it.radioteateonair.app.AnimatedBackgroundView
-        android:id="@+id/backgroundGradient"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Top system bar spacer -->
     <View
@@ -60,7 +60,7 @@
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:layout_margin="8dp"
-            android:background="@drawable/box_icon_ripple_background"
+            android:background="@android:color/transparent"
             android:clickable="true"
             android:contentDescription="@string/schedule_desc"
             android:focusable="true"
@@ -77,7 +77,7 @@
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:layout_margin="8dp"
-            android:background="@drawable/box_icon_ripple_background"
+            android:background="@android:color/transparent"
             android:clickable="true"
             android:contentDescription="@string/programs_desc"
             android:focusable="true"
@@ -93,7 +93,7 @@
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:layout_margin="8dp"
-            android:background="@drawable/box_icon_ripple_background"
+            android:background="@android:color/transparent"
             android:clickable="true"
             android:contentDescription="@string/about_us_desc"
             android:focusable="true"

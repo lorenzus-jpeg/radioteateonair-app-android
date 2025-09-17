@@ -21,7 +21,6 @@ import android.os.Looper
 import android.text.TextUtils
 import android.view.Gravity
 import android.view.View
-import android.view.ViewTreeObserver
 import android.view.Window
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
@@ -41,13 +40,17 @@ import org.jsoup.Jsoup
 import java.net.URL
 import java.util.*
 import java.util.concurrent.Executors
+import android.graphics.Color
+import android.text.Layout
+import android.graphics.text.LineBreaker
+import android.widget.TextView
 
 class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val NOTIFICATION_PERMISSION_REQUEST_CODE = 1001
         const val ACTION_AUDIO_STOPPED = "it.radioteateonair.app.AUDIO_STOPPED"
-        const val ACTION_AUDIO_STARTED = "it.radioteateonair.app.AUDIO_STARTED"
+        const val ACTION_AUDIO_STARTED = "it.radioteateonair.app.ACTION_AUDIO_STARTED"
         private const val CLICK_DEBOUNCE_DELAY = 500L
     }
 
@@ -153,8 +156,16 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        window.statusBarColor = android.graphics.Color.TRANSPARENT
-        window.navigationBarColor = android.graphics.Color.TRANSPARENT
+        @Suppress("DEPRECATION")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            window.statusBarColor = Color.TRANSPARENT
+            window.navigationBarColor = Color.TRANSPARENT
+
+            // For API 30+ (Android 11), use the new method
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                window.setDecorFitsSystemWindows(false)
+            }
+        }
     }
 
     private fun setupClickListeners() {
@@ -171,13 +182,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<View>(R.id.box2).setOnClickListener {
-            val urlIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.radioteateonair.it/programmi/"))
-            startActivity(urlIntent)
+            showProgramsModal()
         }
 
         findViewById<View>(R.id.box3).setOnClickListener {
-            val urlIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.radioteateonair.it/about-us/"))
-            startActivity(urlIntent)
+            showAboutUsModal()
         }
 
         findViewById<View>(R.id.socialFacebook).setOnClickListener {
@@ -642,7 +651,7 @@ class MainActivity : AppCompatActivity() {
         dialog.window?.let { window ->
             window.setLayout(
                 (resources.displayMetrics.widthPixels * 0.95).toInt(),
-                (resources.displayMetrics.heightPixels * 0.80).toInt() // Reduced height to leave space below
+                (resources.displayMetrics.heightPixels * 0.80).toInt()
             )
             window.setGravity(Gravity.CENTER)
             window.setBackgroundDrawableResource(android.R.color.transparent)
@@ -659,14 +668,12 @@ class MainActivity : AppCompatActivity() {
 
         Thread {
             try {
-                // Set connection timeout for faster response
                 val connection = java.net.URL(url).openConnection()
-                connection.connectTimeout = 3000 // 3 seconds
-                connection.readTimeout = 5000 // 5 seconds
+                connection.connectTimeout = 3000
+                connection.readTimeout = 5000
 
                 val doc = Jsoup.parse(connection.getInputStream(), "UTF-8", url)
 
-                // FIXED: Use proper UTF-8 encoded Italian day names
                 val dayNames = listOf("Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato")
                 val todayIndex = Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 1
                 val todayName = dayNames[todayIndex]
@@ -679,7 +686,6 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
-                // RESTORED ORIGINAL IMAGE HANDLING
                 filteredDivs.forEach { div ->
                     div.select(".qt-header-bg").forEach { bgDiv ->
                         val bgUrl = bgDiv.attr("data-bgimage")
@@ -702,7 +708,6 @@ class MainActivity : AppCompatActivity() {
                     """<link rel="stylesheet" href="${it.absUrl("href")}">"""
                 }
 
-                // RESTORED ORIGINAL HTML STRUCTURE with minor improvements
                 val fullHtml = """
                     <html>
                         <head>
@@ -769,6 +774,410 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }.start()
+    }
+
+    @SuppressLint("SetJavaScriptEnabled")
+    private fun showProgramsModal() {
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+
+        val mainLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundColor(Color.parseColor("#1a1a1a"))
+            setPadding(0, 0, 0, 0)
+        }
+
+        val headerLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setBackgroundColor(Color.parseColor("#00FF88"))
+            setPadding(24, 16, 16, 16)
+            gravity = Gravity.CENTER_VERTICAL
+        }
+
+        val titleText = TextView(this).apply {
+            text = "Programmi"
+            textSize = 18f
+            setTextColor(Color.BLACK)
+            typeface = Typeface.DEFAULT_BOLD
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        }
+
+        val closeButton = ImageView(this).apply {
+            setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
+            layoutParams = LinearLayout.LayoutParams(48, 48)
+            setPadding(12, 12, 12, 12)
+            background = createRippleDrawable()
+            setOnClickListener { dialog.dismiss() }
+        }
+
+        headerLayout.addView(titleText)
+        headerLayout.addView(closeButton)
+
+        val progressLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            setPadding(24, 32, 24, 32)
+            setBackgroundColor(Color.parseColor("#1a1a1a"))
+        }
+
+        val progressBar = ProgressBar(this).apply {
+            layoutParams = LinearLayout.LayoutParams(48, 48)
+            indeterminateDrawable.setColorFilter(Color.parseColor("#00FF88"), android.graphics.PorterDuff.Mode.SRC_IN)
+        }
+
+        val loadingText = TextView(this).apply {
+            text = "Caricamento in corso..."
+            textSize = 16f
+            setTextColor(Color.parseColor("#00FF88"))
+            setPadding(24, 0, 0, 0)
+        }
+
+        progressLayout.addView(progressBar)
+        progressLayout.addView(loadingText)
+
+        val webView = WebView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT
+            )
+            setBackgroundColor(Color.WHITE)
+            visibility = View.GONE
+
+            settings.apply {
+                javaScriptEnabled = true
+                domStorageEnabled = true
+                cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
+                loadWithOverviewMode = true
+                useWideViewPort = true
+                builtInZoomControls = false
+                displayZoomControls = false
+                setSupportZoom(false)
+            }
+        }
+
+        fun showErrorContent() {
+            val errorHtml = """
+            <html>
+            <body style='padding:40px; font-family:sans-serif; text-align:center; background:#f8f9fa;'>
+                <div style='background:white; padding:32px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);'>
+                    <h3 style='color:#dc3545; margin-bottom:16px;'>⚠️ Errore di connessione</h3>
+                    <p style='color:#6c757d; margin-bottom:24px;'>Impossibile caricare i programmi. Controlla la connessione internet e riprova.</p>
+                    <button onclick='window.location.reload()' style='background:#00FF88; color:white; border:none; padding:12px 24px; border-radius:8px; font-size:14px; cursor:pointer;'>
+                        Riprova
+                    </button>
+                </div>
+            </body>
+            </html>
+        """.trimIndent()
+
+            webView.loadData(errorHtml, "text/html", "UTF-8")
+        }
+
+        webView.webViewClient = object : WebViewClient() {
+            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                super.onPageStarted(view, url, favicon)
+                progressLayout.visibility = View.VISIBLE
+                webView.visibility = View.GONE
+            }
+
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                handler.postDelayed({
+                    progressLayout.visibility = View.GONE
+                    webView.visibility = View.VISIBLE
+                }, 300)
+            }
+
+            override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
+                super.onReceivedError(view, request, error)
+                showErrorContent()
+            }
+        }
+
+        mainLayout.addView(headerLayout)
+        mainLayout.addView(progressLayout)
+        mainLayout.addView(webView)
+
+        dialog.setContentView(mainLayout)
+
+        dialog.window?.let { window ->
+            window.setLayout(
+                (resources.displayMetrics.widthPixels * 0.95).toInt(),
+                (resources.displayMetrics.heightPixels * 0.80).toInt()
+            )
+            window.setGravity(Gravity.CENTER)
+            window.setBackgroundDrawableResource(android.R.color.transparent)
+
+            val drawable = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = 16f * resources.displayMetrics.density
+                setColor(Color.parseColor("#1a1a1a"))
+            }
+            window.setBackgroundDrawable(drawable)
+        }
+
+        dialog.show()
+
+        // Parse the programs page with Jsoup
+        Thread {
+            try {
+                val connection = java.net.URL("https://www.radioteateonair.it/programmi/").openConnection()
+                connection.connectTimeout = 3000
+                connection.readTimeout = 5000
+
+                val doc = Jsoup.parse(connection.getInputStream(), "UTF-8", "https://www.radioteateonair.it/programmi/")
+
+                // Remove any element containing "PROGRAMMI" text
+                doc.select("*").forEach { element ->
+                    if (element.ownText().equals("PROGRAMMI", ignoreCase = true)) {
+                        element.remove()
+                    }
+                }
+
+                // Style "podcast attivi" and "podcast archiviati" elements
+                doc.select("*").forEach { element ->
+                    val text = element.ownText().lowercase()
+                    if (text.contains("podcast attivi") || text.contains("podcast archiviati")) {
+                        element.attr("style", "${element.attr("style")}; color: black !important; font-variant: small-caps !important; font-weight: bold !important;")
+                    }
+                }
+
+                // Try multiple selectors to find program elements
+                val programs = doc.select("article, .program-item, .post, .entry, .content-item, .program, .show").ifEmpty {
+                    // If no specific program elements found, try broader selectors
+                    doc.select("div[class*='program'], div[class*='show'], div[class*='post']").ifEmpty {
+                        // Last resort: get all divs with headings
+                        doc.select("div:has(h1), div:has(h2), div:has(h3)")
+                    }
+                }
+
+                val finalContent = if (programs.isNotEmpty()) {
+                    // Process and clean up the program elements
+                    val processedPrograms = programs.map { program ->
+                        // Remove unwanted elements like navigation, sidebar, etc.
+                        program.select("nav, .nav, .navigation, .sidebar, .widget, script, style").remove()
+
+                        // Find and enhance images
+                        program.select("img").forEach { img ->
+                            val src = img.attr("src")
+                            if (src.isNotEmpty()) {
+                                if (src.startsWith("/")) {
+                                    img.attr("src", "https://www.radioteateonair.it$src")
+                                }
+                                img.attr("style", "max-width: 100%; height: auto; border-radius: 8px; margin: 8px 0;")
+                            }
+                        }
+
+                        // Add styling to program containers
+                        program.attr("style", "margin-bottom: 24px; padding: 16px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); background: white;")
+
+                        program.outerHtml()
+                    }.joinToString("\n")
+
+                    processedPrograms
+                } else {
+                    // Fallback: get the main content
+                    val mainContent = doc.select("main, .main, .content, .site-content, #content, .entry-content").first()
+
+                    mainContent?.let { content ->
+                        // Clean up the content
+                        content.select("nav, .nav, .navigation, .sidebar, .widget, script, style, header, footer").remove()
+
+                        // Fix image URLs
+                        content.select("img").forEach { img ->
+                            val src = img.attr("src")
+                            if (src.startsWith("/")) {
+                                img.attr("src", "https://www.radioteateonair.it$src")
+                            }
+                        }
+
+                        content.html()
+                    } ?: "<div style='text-align: center; padding: 40px;'><p>Nessun programma trovato. Visita il sito web per maggiori informazioni.</p></div>"
+                }
+
+                // Get CSS links for styling
+                val cssLinks = doc.select("link[rel=stylesheet]").take(5).joinToString("\n") {
+                    """<link rel="stylesheet" href="${it.absUrl("href")}">"""
+                }
+
+                val fullHtml = """
+            <html>
+                <head>
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+                    $cssLinks
+                    <style>
+                        body { 
+                            margin: 0; 
+                            padding: 16px; 
+                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+                            background: #f8f9fa; 
+                            color: #333; 
+                            line-height: 1.5;
+                            font-size: 14px;
+                        }
+                        img { 
+                            max-width: 100% !important; 
+                            height: auto !important; 
+                            display: block; 
+                            margin: 8px auto; 
+                            border-radius: 8px;
+                        }
+                        h1, h2, h3, h4, h5, h6 {
+                            color: #00FF88;
+                            margin-top: 20px;
+                            margin-bottom: 12px;
+                        }
+                        p {
+                            margin-bottom: 16px;
+                            color: #555;
+                        }
+                        a {
+                            color: #00FF88;
+                            text-decoration: none;
+                        }
+                        a:hover {
+                            text-decoration: underline;
+                        }
+                        .program-item, article, .post {
+                            background: white;
+                            margin-bottom: 20px;
+                            padding: 16px;
+                            border-radius: 12px;
+                            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                        }
+                        /* Special styling for podcast section headers */
+                        *[style*="small-caps"] {
+                            color: black !important;
+                            font-variant: small-caps !important;
+                            font-weight: bold !important;
+                        }
+                        @media (max-width: 600px) {
+                            body { padding: 12px; font-size: 13px; }
+                        }
+                        @media (min-width: 768px) {
+                            body { padding: 24px; font-size: 16px; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    $finalContent
+                </body>
+            </html>
+        """.trimIndent()
+
+                runOnUiThread {
+                    if (dialog.isShowing) {
+                        webView.loadDataWithBaseURL("https://www.radioteateonair.it/programmi/", fullHtml, "text/html", "UTF-8", null)
+                    }
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                runOnUiThread {
+                    if (dialog.isShowing) {
+                        showErrorContent()
+                    }
+                }
+            }
+        }.start()
+    }
+
+    private fun showAboutUsModal() {
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+
+        val mainLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundColor(Color.parseColor("#1a1a1a"))
+            setPadding(0, 0, 0, 0)
+        }
+
+        val headerLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setBackgroundColor(Color.parseColor("#00FF88"))
+            setPadding(24, 16, 16, 16)
+            gravity = Gravity.CENTER_VERTICAL
+        }
+
+        val titleText = TextView(this).apply {
+            text = "Chi Siamo"
+            textSize = 18f
+            setTextColor(Color.BLACK)
+            typeface = Typeface.DEFAULT_BOLD
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        }
+
+        val closeButton = ImageView(this).apply {
+            setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
+            layoutParams = LinearLayout.LayoutParams(48, 48)
+            setPadding(12, 12, 12, 12)
+            background = createRippleDrawable()
+            setOnClickListener { dialog.dismiss() }
+        }
+
+        headerLayout.addView(titleText)
+        headerLayout.addView(closeButton)
+
+        // Scrollable content layout
+        val scrollView = ScrollView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT
+            )
+            setBackgroundColor(Color.WHITE)
+        }
+
+        val contentLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(24, 24, 24, 24)
+        }
+
+        // Hardcoded "Chi Siamo" text content
+        val aboutUsText = getString(R.string.about_us_content)
+
+        val textView = TextView(this).apply {
+            text = aboutUsText
+            textSize = 16f
+            setTextColor(Color.parseColor("#333333"))
+            setLineSpacing(8f, 1.0f)
+            setPadding(0, 0, 0, 20)
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // API 29+
+                justificationMode = LineBreaker.JUSTIFICATION_MODE_INTER_WORD
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                // API 26–28
+                justificationMode = LineBreaker.JUSTIFICATION_MODE_INTER_WORD
+            }
+        }
+
+
+
+
+        contentLayout.addView(textView)
+        scrollView.addView(contentLayout)
+        mainLayout.addView(headerLayout)
+        mainLayout.addView(scrollView)
+
+        dialog.setContentView(mainLayout)
+
+        dialog.window?.let { window ->
+            window.setLayout(
+                (resources.displayMetrics.widthPixels * 0.95).toInt(),
+                (resources.displayMetrics.heightPixels * 0.80).toInt()
+            )
+            window.setGravity(Gravity.CENTER)
+            window.setBackgroundDrawableResource(android.R.color.transparent)
+
+            val drawable = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = 16f * resources.displayMetrics.density
+                setColor(Color.parseColor("#1a1a1a"))
+            }
+            window.setBackgroundDrawable(drawable)
+        }
+
+        dialog.show()
     }
 
     private fun createRippleDrawable(): Drawable {

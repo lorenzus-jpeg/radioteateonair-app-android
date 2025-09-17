@@ -3,7 +3,9 @@
 
 # Ignore APKs
 *.apk
+*.ap_
 *.aab
+*.aar
 /app/release/
 /app/debug/
 
@@ -13,10 +15,16 @@
 *.pem
 *.p12
 
-# Ignore local signing config
+# Local configuration files
 local.properties
+.DS_Store
+.navigation/
+captures/
 
 # Android Studio
 .gradle
 .idea
 *.iml
+
+# Logs
+*.log

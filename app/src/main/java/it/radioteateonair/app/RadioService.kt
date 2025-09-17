@@ -264,10 +264,6 @@ class RadioService : Service() {
         }
     }
 
-    private fun pauseStream() {
-        // For radio streaming, pause = stop audio but keep notification
-        stopStreamButKeepNotification()
-    }
 
     private fun stopStreamButKeepNotification() {
         val wasPlaying = isPlaying
@@ -315,11 +311,6 @@ class RadioService : Service() {
         // Stop the service completely and remove notification
         stopForeground(true)
         stopSelf()
-    }
-
-    private fun stopStream() {
-        // This method is kept for backward compatibility but now just calls the new method
-        closeNotificationAndService()
     }
 
     override fun onDestroy() {
