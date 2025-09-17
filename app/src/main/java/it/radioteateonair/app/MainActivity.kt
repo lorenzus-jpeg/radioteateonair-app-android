@@ -621,26 +621,7 @@ class MainActivity : AppCompatActivity() {
             webView.loadData(errorHtml, "text/html", "UTF-8")
         }
 
-        webView.webViewClient = object : WebViewClient() {
-            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                super.onPageStarted(view, url, favicon)
-                progressLayout.visibility = View.VISIBLE
-                webView.visibility = View.GONE
-            }
-
-            override fun onPageFinished(view: WebView?, url: String?) {
-                super.onPageFinished(view, url)
-                handler.postDelayed({
-                    progressLayout.visibility = View.GONE
-                    webView.visibility = View.VISIBLE
-                }, 300)
-            }
-
-            override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
-                super.onReceivedError(view, request, error)
-                showErrorContent()
-            }
-        }
+        webView.webViewClient = createWebViewClient("https://radioteateonair.it/palinsesto", progressLayout)
 
         mainLayout.addView(headerLayout)
         mainLayout.addView(progressLayout)
@@ -873,26 +854,7 @@ class MainActivity : AppCompatActivity() {
             webView.loadData(errorHtml, "text/html", "UTF-8")
         }
 
-        webView.webViewClient = object : WebViewClient() {
-            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                super.onPageStarted(view, url, favicon)
-                progressLayout.visibility = View.VISIBLE
-                webView.visibility = View.GONE
-            }
-
-            override fun onPageFinished(view: WebView?, url: String?) {
-                super.onPageFinished(view, url)
-                handler.postDelayed({
-                    progressLayout.visibility = View.GONE
-                    webView.visibility = View.VISIBLE
-                }, 300)
-            }
-
-            override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
-                super.onReceivedError(view, request, error)
-                showErrorContent()
-            }
-        }
+        webView.webViewClient = createWebViewClient("https://www.radioteateonair.it/programmi/", progressLayout)
 
         mainLayout.addView(headerLayout)
         mainLayout.addView(progressLayout)
@@ -1203,6 +1165,67 @@ class MainActivity : AppCompatActivity() {
             handler.postDelayed({
                 // Refresh layout after orientation change
             }, 100)
+        }
+    }
+
+
+    private fun createWebViewClient(allowedBaseUrl: String, progressLayout: LinearLayout): WebViewClient {
+        return object : WebViewClient() {
+            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                super.onPageStarted(view, url, favicon)
+                progressLayout.visibility = View.VISIBLE
+                view?.visibility = View.GONE
+            }
+
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                handler.postDelayed({
+                    progressLayout.visibility = View.GONE
+                    view?.visibility = View.VISIBLE
+                }, 300)
+            }
+
+            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                val url = request?.url?.toString() ?: return false
+
+                // Allow the initial allowed URL and its fragments/anchors
+                if (url.startsWith(allowedBaseUrl)) {
+                    return false // Let WebView handle it
+                }
+
+                // For any other URL, open in external browser
+                try {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                    startActivity(intent)
+                    return true // Prevent WebView from loading it
+                } catch (e: Exception) {
+                    showToast("Link non supportato")
+                    return true
+                }
+            }
+
+            override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
+                super.onReceivedError(view, request, error)
+                showErrorContent(view)
+            }
+
+            private fun showErrorContent(webView: WebView?) {
+                val errorHtml = """
+                <html>
+                <body style='padding:40px; font-family:sans-serif; text-align:center; background:#f8f9fa;'>
+                    <div style='background:white; padding:32px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);'>
+                        <h3 style='color:#dc3545; margin-bottom:16px;'>⚠️ Errore di connessione</h3>
+                        <p style='color:#6c757d; margin-bottom:24px;'>Impossibile caricare il contenuto. Controlla la connessione internet e riprova.</p>
+                        <button onclick='window.location.reload()' style='background:#00FF88; color:white; border:none; padding:12px 24px; border-radius:8px; font-size:14px; cursor:pointer;'>
+                            Riprova
+                        </button>
+                    </div>
+                </body>
+                </html>
+            """.trimIndent()
+
+                webView?.loadData(errorHtml, "text/html", "UTF-8")
+            }
         }
     }
 }
