@@ -9,7 +9,7 @@
     android:fitsSystemWindows="true">
 
     <!-- Animated background with waves ONLY (no gradient) - now behind logo -->
-    <it.radioteateonair.app.AnimatedBackgroundView
+    <it.teateonair.app.AnimatedBackgroundView
         android:id="@+id/backgroundGradient"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -164,7 +164,7 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <!-- Animated black waves background for player -->
-        <it.radioteateonair.app.PlayerAnimatedBackgroundView
+        <it.teateonair.app.PlayerAnimatedBackgroundView
             android:id="@+id/playerBackgroundWaves"
             android:layout_width="0dp"
             android:layout_height="0dp"

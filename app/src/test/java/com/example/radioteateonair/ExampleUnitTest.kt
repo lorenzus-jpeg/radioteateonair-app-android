@@ -1,4 +1,4 @@
-package it.radioteateonair.app
+package it.teateonair.app
 
 import org.junit.Test
 

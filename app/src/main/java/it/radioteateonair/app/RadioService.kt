@@ -1,4 +1,4 @@
-package it.radioteateonair.app
+package it.teateonair.app
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -22,10 +22,10 @@ import java.util.concurrent.Executors
 class RadioService : Service() {
 
     companion object {
-        const val ACTION_PLAY = "it.radioteateonair.app.ACTION_PLAY"
-        const val ACTION_PAUSE = "it.radioteateonair.app.ACTION_PAUSE"
-        const val ACTION_STOP = "it.radioteateonair.app.ACTION_STOP"
-        const val ACTION_CLOSE = "it.radioteateonair.app.ACTION_CLOSE"
+        const val ACTION_PLAY = "it.teateonair.app.ACTION_PLAY"
+        const val ACTION_PAUSE = "it.teateonair.app.ACTION_PAUSE"
+        const val ACTION_STOP = "it.teateonair.app.ACTION_STOP"
+        const val ACTION_CLOSE = "it.teateonair.app.ACTION_CLOSE"
         private const val NOTIFICATION_ID = 1
         private const val CHANNEL_ID = "radio_channel"
     }

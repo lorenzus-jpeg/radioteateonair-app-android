@@ -1,4 +1,4 @@
-package it.radioteateonair.app
+package it.teateonair.app
 
 import android.annotation.SuppressLint
 import android.app.Dialog
@@ -49,8 +49,8 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val NOTIFICATION_PERMISSION_REQUEST_CODE = 1001
-        const val ACTION_AUDIO_STOPPED = "it.radioteateonair.app.AUDIO_STOPPED"
-        const val ACTION_AUDIO_STARTED = "it.radioteateonair.app.ACTION_AUDIO_STARTED"
+        const val ACTION_AUDIO_STOPPED = "it.teateonair.app.AUDIO_STOPPED"
+        const val ACTION_AUDIO_STARTED = "it.teateonair.app.ACTION_AUDIO_STARTED"
         private const val CLICK_DEBOUNCE_DELAY = 500L
     }
 

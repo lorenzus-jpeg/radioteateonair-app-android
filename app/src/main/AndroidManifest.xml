@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="it.radioteateonair.app">
+    package="it.teateonair.app">
 
     <!-- Required permissions -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />

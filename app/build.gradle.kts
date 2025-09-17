@@ -4,15 +4,15 @@ plugins {
 }
 
 android {
-    namespace = "it.radioteateonair.app"
+    namespace = "it.teateonair.app"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "it.radioteateonair.app"
+        applicationId = "it.teateonair.app"
         minSdk = 33
         targetSdk = 35
-        versionCode = 15
-        versionName = "RTOA 15"
+        versionCode = 1
+        versionName = "TOA - 01"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true

@@ -1,4 +1,4 @@
-package it.radioteateonair.app
+package it.teateonair.app
 
 import android.animation.ValueAnimator
 import android.content.Context
