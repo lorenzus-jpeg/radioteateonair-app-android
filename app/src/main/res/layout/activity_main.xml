@@ -8,7 +8,7 @@
     android:background="#000000"
     android:fitsSystemWindows="true">
 
-    <!-- Animated background with waves ONLY (no gradient) - now behind logo -->
+    <!-- Animated background with waves -->
     <it.teateonair.app.AnimatedBackgroundView
         android:id="@+id/backgroundGradient"
         android:layout_width="match_parent"
@@ -17,21 +17,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
-
-    <!-- Background Image (now on top of waves) - centered and half size -->
-    <ImageView
-        android:id="@+id/backgroundImage"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:src="@drawable/ic_rtoa_background"
-        android:scaleType="fitCenter"
-        android:alpha="0.6"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintWidth_percent="0.5"
-        app:layout_constraintHeight_percent="0.35" />
 
     <!-- Top system bar spacer -->
     <View
@@ -42,17 +27,15 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Centered container for main boxes with texts -->
+    <!-- TOP BOXES (moved to the very top) -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/boxContainer"
-        android:layout_width="346dp"
-        android:layout_height="160dp"
-        app:layout_constraintBottom_toTopOf="@id/playerBar"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.497"
-        app:layout_constraintStart_toStartOf="parent"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         app:layout_constraintTop_toBottomOf="@id/topInsetSpacer"
-        app:layout_constraintVertical_bias="0.15">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <!-- BOXES AT TOP -->
         <ImageView
@@ -117,7 +100,8 @@
             android:layout_marginTop="8dp"
             app:layout_constraintTop_toBottomOf="@id/box1"
             app:layout_constraintStart_toStartOf="@id/box1"
-            app:layout_constraintEnd_toEndOf="@id/box1" />
+            app:layout_constraintEnd_toEndOf="@id/box1"
+            app:layout_constraintBottom_toBottomOf="parent" />
 
         <TextView
             android:id="@+id/text2"
@@ -131,7 +115,8 @@
             android:layout_marginTop="8dp"
             app:layout_constraintTop_toBottomOf="@id/box2"
             app:layout_constraintStart_toStartOf="@id/box2"
-            app:layout_constraintEnd_toEndOf="@id/box2" />
+            app:layout_constraintEnd_toEndOf="@id/box2"
+            app:layout_constraintBottom_toBottomOf="parent" />
 
         <TextView
             android:id="@+id/text3"
@@ -145,11 +130,30 @@
             android:layout_marginTop="8dp"
             app:layout_constraintTop_toBottomOf="@id/box3"
             app:layout_constraintStart_toStartOf="@id/box3"
-            app:layout_constraintEnd_toEndOf="@id/box3" />
+            app:layout_constraintEnd_toEndOf="@id/box3"
+            app:layout_constraintBottom_toBottomOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- FUTURISTIC PLAYER BAR (now above social media) -->
+    <!-- CENTERED LOGO - Takes all available space between boxes and player -->
+    <!-- CENTERED LOGO - Smaller size -->
+    <ImageView
+        android:id="@+id/backgroundImage"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:src="@drawable/ic_rtoa_background"
+        android:scaleType="fitCenter"
+        android:alpha="0.6"
+        android:layout_marginStart="80dp"
+        android:layout_marginEnd="80dp"
+        android:layout_marginTop="48dp"
+        android:layout_marginBottom="48dp"
+        app:layout_constraintTop_toBottomOf="@id/boxContainer"
+        app:layout_constraintBottom_toTopOf="@id/playerBar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- FUTURISTIC PLAYER BAR -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/playerBar"
         android:layout_width="0dp"
@@ -281,7 +285,7 @@
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- MODERN FUTURISTIC SOCIAL MEDIA BOX (now below player) -->
+    <!-- MODERN FUTURISTIC SOCIAL MEDIA BOX -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/socialMediaBox"
         android:layout_width="0dp"
