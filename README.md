@@ -44,7 +44,7 @@ Per clonare, configurare e avviare l'applicazione in locale, segui questi passag
 
 1.  **Clonazione:** Clona il repository sulla tua macchina locale:
     ```bash
-    git clone [https://github.com/](https://github.com/)[IlTuoUsername]/[IlTuoRepo].git
+    git clone [[https://github.com/](https://github.com/)[IlTuoUsername]/[IlTuoRepo]](https://github.com/lorenzus-jpeg/radioteateonair-app-android`).git
     ```
 2.  **Navigazione:** Entra nella cartella del progetto:
     ```bash
@@ -75,6 +75,10 @@ TODO
 
 ## 7. Licenza
 
-TODO
+Questo progetto è distribuito sotto la licenza **GNU General Public License (GPL) v3**.
+
+Questa licenza garantisce che il software rimanga libero, assicurando che qualsiasi lavoro derivato o modificato venga anch'esso rilasciato come open-source (Strong Copyleft).
+
+Per i dettagli completi relativi ai diritti di utilizzo, modifica e distribuzione, consulta il file **[LICENSE](LICENSE)** incluso nel repository.
 
 ---
