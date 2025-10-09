@@ -1,28 +1,80 @@
 # Radio Teate On Air
 
-**RADIO TEATE ON AIR** è l'app ufficiale Android per ascoltare in diretta i contenuti di *Radio Teate On Air*. Sviluppata nativamente in Kotlin, l'app offre un'interfaccia fluida e reattiva per avviare lo streaming, visualizzare il palinsesto del giorno e ricevere aggiornamenti in tempo reale sul podcast o brano in riproduzione.
+---
 
-**Scaricala ora da Google Play:**  [Play Store](https://play.google.com/store/apps/details?id=it.teateonair.app&hl=it)
+## Indice
+
+1.  [Introduzione](#1-introduzione)
+2.  [Caratteristiche Principali](#2-caratteristiche-principali)
+3.  [Installazione e Uso](#3-installazione-e-uso)
+4.  [Tecnologie Utilizzate](#4-tecnologie-utilizzate)
+5.  [Architettura](#5-architettura)
+6.  [Contribuire](#6-contribuire)
+7.  [Licenza](#7-licenza)
+8.  [Contatti](#8-contatti)
 
 ---
 
-## Funzionalità principali
+## 1. Introduzione
 
-- **Streaming audio live** tramite MediaPlayer, anche in background
-- **Visualizzazione del palinsesto** filtrato per giorno della settimana
-- **Informazioni brano in tempo reale** (artista e titolo)
-- **Messaggi scorrevoli** in stile marquee per annunci dinamici
-- **Servizio in background** con notifica persistente
+**Radio Teate On Air** è l'applicazione ufficiale ed open-source sviluppata per permettere a tutti gli ascoltatori di seguire il nostro palinsesto in streaming. Il progetto è nato per offrire un'esperienza di ascolto fluida, affidabile e con un'interfaccia utente semplice e intuitiva.
 
 ---
 
-## Stack Tecnologico
+## 2. Caratteristiche Principali
 
-- **Linguaggio:** Kotlin
-- **Interfaccia UI:** ConstraintLayout, WebView, Custom Views
-- **Streaming:** `MediaPlayer` Android
-- **Parsing HTML/JSON:** `Jsoup`, `JSONObject`
-- **Animazioni:** `ValueAnimator` per barre audio reattive
+* **Streaming Affidabile:** Supporto per flussi audio **[MP3/AAC/HLS]** a bassa latenza e con riconnessione automatica in caso di interruzione.
+* **Metadati in Tempo Reale:** Visualizzazione immediata del titolo della canzone, dell'artista o del nome del programma in onda.
 
 ---
 
+## 3. Installazione e Uso
+
+### 3.1 Per l'Utente (App Pubblicata)
+
+L'app è disponibile sui seguenti store ufficiali:
+
+| Piattaforma | Link per il Download |
+| :--- | :--- |
+| Google Play | [https://play.google.com/store/apps/details?id=it.teateonair.app] |
+
+### 3.2 Per lo Sviluppatore (Build da Sorgente)
+
+Per clonare, configurare e avviare l'applicazione in locale, segui questi passaggi:
+
+1.  **Clonazione:** Clona il repository sulla tua macchina locale:
+    ```bash
+    git clone [https://github.com/](https://github.com/)[IlTuoUsername]/[IlTuoRepo].git
+    ```
+2.  **Navigazione:** Entra nella cartella del progetto:
+    ```bash
+    cd [IlTuoRepo]
+    ```
+3.  **Configurazione:** Apri il progetto in Android Studio. Assicurati che il tuo ambiente rispetti i requisiti di SDK e Gradle.
+4.  **Esecuzione:** Sincronizza Gradle e avvia l'app su un emulatore o un dispositivo fisico.
+
+---
+
+## 4. Tecnologie Utilizzate
+
+TODO
+
+---
+
+## 5. Architettura
+
+TODO
+
+---
+
+## 6. Contribuire
+
+TODO
+
+---
+
+## 7. Licenza
+
+TODO
+
+---
