@@ -36,7 +36,7 @@ L'app è disponibile sui seguenti store ufficiali:
 
 | Piattaforma | Link per il Download |
 | :--- | :--- |
-| Google Play | [https://play.google.com/store/apps/details?id=it.teateonair.app] |
+| Google Play | https://play.google.com/store/apps/details?id=it.teateonair.app |
 
 ### 3.2 Per lo Sviluppatore (Build da Sorgente)
 
