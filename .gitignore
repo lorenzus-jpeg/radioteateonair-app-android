@@ -43,13 +43,14 @@ proguard/
 logs/
 log/
 
-# ==================== ANDROID STUDIO ====================
+# ==================== ANDROID STUDIO / INTELLIJ IDEA ====================
 .navigation/
 captures/
 .externalNativeBuild/
 .cxx/
 *.iml
 .idea/
+.idea/*
 *.ipr
 *.iws
 
@@ -412,6 +413,7 @@ personal*/
 # 5. Rotate ALL compromised keys/passwords immediately
 #
 # Never commit:
+# - IDE configuration files (.idea/, *.iml)
 # - Keystore files (.jks, .keystore)
 # - API keys
 # - Passwords or tokens
