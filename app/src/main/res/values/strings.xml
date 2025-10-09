@@ -1,67 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Place this file in res/values/strings.xml -->
 <resources>
-    <string name="app_name">Radio Teate OnAir</string>
+    <string name="app_name">Radio Teate On Air</string>
 
-    <!-- Content descriptions for accessibility -->
-    <string name="logo_description">Radio Teate OnAir Logo</string>
-    <string name="calendar_description">Palinsesto</string>
-    <string name="programs_description">Programmi</string>
-    <string name="about_description">Chi siamo</string>
-    <string name="social_description">Social Media</string>
-    <string name="stop_description">Ferma riproduzione</string>
+    <string name="sample_title">Caricamento...</string>
+    <string name="sample_artist"></string>
+    <string name="play_radio">Play Radio</string>
+    <string name="stop_radio">Stop Radio</string>
 
-    <!-- Sample text -->
-    <string name="sample_title">Titolo Esempio</string>
-    <string name="sample_artist">Artista Esempio</string>
+    <string name="follow_us">Seguici su</string>
 
-    <!-- Loading and error text -->
-    <string name="loading">Caricamento...</string>
-    <string name="unknown_artist">Artista Sconosciuto</string>
-    <string name="unknown_title">Titolo Sconosciuto</string>
-
-    <!-- Dialog text -->
-    <string name="close">Chiudi</string>
-    <string name="follow_us">Seguici sui Social</string>
-
-    <!-- Social media descriptions -->
-    <string name="instagram_description">Instagram</string>
-    <string name="facebook_description">Facebook</string>
-    <string name="youtube_description">YouTube</string>
-    <string name="tiktok_description">TikTok</string>
-
-    <!-- Toast messages -->
-    <string name="box_clicked">Box %1$d cliccato</string>
-
-    <!-- Schedule text -->
-    <string name="no_programs_today">Nessun programma disponibile per %1$s</string>
-
-    <!-- Error messages -->
-    <string name="connection_error">Errore di connessione</string>
-    <string name="schedule_load_error">Impossibile caricare il palinsesto. Verifica la connessione internet.</string>
-
-    <!-- ADDITIONAL STRINGS NEEDED FOR ACCESSIBILITY FIXES -->
-
-    <!-- Navigation Labels -->
-    <string name="palinsesto">PALINSESTO</string>
     <string name="palinsesto_podcast">PALINSESTO\nOGGI</string>
     <string name="programmi">PROGRAMMI</string>
     <string name="chi_siamo">CHI SIAMO</string>
 
-    <!-- Social Media Accessibility Descriptions -->
+    <string name="unknown_artist"></string>
+    <string name="unknown_title">Caricamento..</string>
+
+    <!-- Social media descriptions -->
     <string name="facebook_desc">Vai alla pagina Facebook di Radio Teate OnAir</string>
     <string name="instagram_desc">Vai al profilo Instagram di Radio Teate OnAir</string>
     <string name="tiktok_desc">Vai al profilo TikTok di Radio Teate OnAir</string>
     <string name="youtube_desc">Vai al canale YouTube di Radio Teate OnAir</string>
 
-    <!-- Navigation Accessibility Descriptions -->
+    <!-- Navigation Labels -->
     <string name="schedule_desc">Visualizza il palinsesto della radio</string>
     <string name="programs_desc">Scopri i programmi della radio</string>
     <string name="about_us_desc">Informazioni su Radio Teate OnAir</string>
-
-    <!-- Player Example Text -->
-    <string name="example_title">Caricamento...</string>
-    <string name="example_artist"></string>
 
     <!-- Chi Siamo Modal Content -->
     <string name="about_us_content">
@@ -73,5 +38,8 @@
         L’obiettivo di Teate On Air è quello di creare sempre di più uno spazio di aggregazione, di scambio di idee e competenze, di dare l’opportunità di crescita ai giovani e di dare voce alla cittadinanza.\n
         Il punto di nascita è Chieti ma dalle radici il progetto cresce in tutto il territorio abruzzese ed oltre e per rafforzare l’idea, che non ha scopo di lucro, si cercano giovani motivati che hanno voglia di mettersi in gioco e che possono dedicare le loro competenze e parte del loro tempo per aggiungere valore al gruppo.
     </string>
+
+
+    <!-- Error messages -->
 
 </resources>

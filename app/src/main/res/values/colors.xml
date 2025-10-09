@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Color resources for Radio Teate OnAir
+    Place this file in: res/values/colors.xml
+-->
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <!-- Primary colors -->
+    <color name="black">#000000</color>
+    <color name="white">#FFFFFF</color>
+    <color name="green_primary">#00FF88</color>
+
 </resources>

@@ -1,5 +1,9 @@
 package it.teateonair.app
-
+import android.graphics.Typeface
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.ForegroundColorSpan
+import android.text.style.StyleSpan
 import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.BroadcastReceiver
@@ -417,7 +421,7 @@ class MainActivity : AppCompatActivity() {
                         e.printStackTrace()
                         handler.post {
                             if (isFirstLoad) {
-                                artistName.text = getString(R.string.loading)
+                                artistName.text = getString(R.string.sample_title)
                                 songTitle.text = ""
                                 adjustTextSizes()
                             }
@@ -1044,6 +1048,48 @@ class MainActivity : AppCompatActivity() {
         }.start()
     }
 
+    /**
+     * Helper function to make specific words green and bold in a text
+     * @param fullText The complete text
+     * @param wordsToHighlight List of words/phrases to make green and bold
+     * @return SpannableStringBuilder with styled text
+     */
+    private fun createStyledText(fullText: String, wordsToHighlight: List<String>): SpannableStringBuilder {
+        val spannableBuilder = SpannableStringBuilder(fullText)
+        val greenColor = Color.parseColor("#00FF88")
+
+        wordsToHighlight.forEach { word ->
+            var startIndex = 0
+            while (startIndex != -1) {
+                startIndex = fullText.indexOf(word, startIndex, ignoreCase = true)
+                if (startIndex != -1) {
+                    val endIndex = startIndex + word.length
+
+                    // Apply green color
+                    spannableBuilder.setSpan(
+                        ForegroundColorSpan(greenColor),
+                        startIndex,
+                        endIndex,
+                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+
+                    // Apply bold style
+                    spannableBuilder.setSpan(
+                        StyleSpan(Typeface.BOLD),
+                        startIndex,
+                        endIndex,
+                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+
+                    startIndex = endIndex
+                }
+            }
+        }
+
+        return spannableBuilder
+    }
+
+    // Updated showAboutUsModal function
     private fun showAboutUsModal() {
         val dialog = Dialog(this)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -1080,7 +1126,6 @@ class MainActivity : AppCompatActivity() {
         headerLayout.addView(titleText)
         headerLayout.addView(closeButton)
 
-        // Scrollable content layout
         val scrollView = ScrollView(this).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -1091,30 +1136,47 @@ class MainActivity : AppCompatActivity() {
 
         val contentLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(24, 24, 24, 24)
+            setPadding(32, 32, 32, 32)
         }
 
-        // Hardcoded "Chi Siamo" text content
+        // Get the text content
         val aboutUsText = getString(R.string.about_us_content)
 
+        // Define which words/phrases you want to be green and bold
+        val wordsToHighlight = listOf(
+            "Erga Omnes",
+            "musica",
+            "Teate On Air",
+            "Chieti"
+            // Add more words you want to highlight
+        )
+
+        // Create styled text
+        val styledText = createStyledText(aboutUsText, wordsToHighlight)
+
         val textView = TextView(this).apply {
-            text = aboutUsText
-            textSize = 16f
-            setTextColor(Color.parseColor("#333333"))
-            setLineSpacing(8f, 1.0f)
-            setPadding(0, 0, 0, 20)
+            text = styledText  // Use the styled text instead of plain text
+            textSize = 14f
+            setTextColor(Color.parseColor("#2c3e50"))
+
+            typeface = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                Typeface.create("sans-serif-light", Typeface.NORMAL)
+            } else {
+                Typeface.DEFAULT
+            }
+
+            setLineSpacing(12f, 1.15f)
+            letterSpacing = 0.02f
+            setPadding(0, 0, 0, 24)
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                // API 29+
                 justificationMode = LineBreaker.JUSTIFICATION_MODE_INTER_WORD
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                // API 26–28
                 justificationMode = LineBreaker.JUSTIFICATION_MODE_INTER_WORD
             }
+
+            setShadowLayer(1f, 0f, 1f, Color.parseColor("#10000000"))
         }
-
-
-
 
         contentLayout.addView(textView)
         scrollView.addView(contentLayout)
