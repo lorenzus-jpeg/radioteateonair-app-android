@@ -44,7 +44,7 @@ Per clonare, configurare e avviare l'applicazione in locale, segui questi passag
 
 1.  **Clonazione:** Clona il repository sulla tua macchina locale:
     ```bash
-    git clone [[https://github.com/](https://github.com/)[IlTuoUsername]/[IlTuoRepo]](https://github.com/lorenzus-jpeg/radioteateonair-app-android`).git
+    git clone https://github.com/lorenzus-jpeg/radioteateonair-app-android.git
     ```
 2.  **Navigazione:** Entra nella cartella del progetto:
     ```bash
