@@ -119,9 +119,6 @@ IDE REQUIREMENTS:
 - AnimatedBackgroundView (Custom View - 10 waves)
 - PlayerAnimatedBackgroundView (Custom View - 6 waves)
 
-
----
-
 ---
 
 ## 6. Licenza
