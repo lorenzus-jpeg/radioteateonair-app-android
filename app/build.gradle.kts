@@ -40,19 +40,19 @@ android {
 }
 
 dependencies {
-    implementation(libs.material) // ✅ Uses 1.12.0 from TOML
+    implementation(libs.material)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.jsoup)
-    implementation("androidx.media:media:1.6.0")
-
-    // Media session and notification support
     implementation("androidx.media:media:1.7.0")
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
 
+    // Testing dependencies
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation("androidx.test:runner:1.5.2")
+    androidTestImplementation("androidx.test:rules:1.5.0")
 }

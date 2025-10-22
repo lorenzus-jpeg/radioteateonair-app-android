@@ -68,7 +68,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var bottomInsetSpacer: View
     private val executor = Executors.newSingleThreadExecutor()
 
-    private var isPlaying = false
+    internal var isPlaying = false
     private var isFirstLoad = true
     private var lastClickTime = 0L
     private var isProcessingClick = false
