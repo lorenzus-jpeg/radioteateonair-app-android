@@ -9,9 +9,8 @@
 3.  [Installazione e Uso](#3-installazione-e-uso)
 4.  [Tecnologie Utilizzate](#4-tecnologie-utilizzate)
 5.  [Architettura](#5-architettura)
-6.  [Contribuire](#6-contribuire)
-7.  [Licenza](#7-licenza)
-8.  [Contatti](#8-contatti)
+6.  [Licenza](#6-licenza)
+7.  [Contatti](#7-contatti)
 
 ---
 
@@ -57,23 +56,75 @@ Per clonare, configurare e avviare l'applicazione in locale, segui questi passag
 
 ## 4. Tecnologie Utilizzate
 
-TODO
+AndroidX Libraries:
+- androidx.appcompat:appcompat
+- androidx.core:core-ktx
+- androidx.constraintlayout:constraintlayout
+- androidx.media:media
+- androidx.localbroadcastmanager:localbroadcastmanager
+
+Third-Party:
+- org.jsoup:jsoup
+
+Android Framework:
+- android.animation.ValueAnimator
+- android.media.MediaPlayer
+- android.media.AudioAttributes
+- android.app.Service
+- android.app.NotificationManager
+- android.app.NotificationChannel
+- android.app.Notification
+- android.webkit.WebView
+- android.webkit.WebViewClient
+- android.webkit.WebSettings
+- android.graphics.Canvas
+- android.graphics.Path
+- android.graphics.Paint
+- android.graphics.LinearGradient
+- android.graphics.Color
+- android.graphics.drawable.GradientDrawable
+- android.graphics.drawable.RippleDrawable
+- android.os.Handler
+- android.os.Looper
+- android.os.Build
+- android.content.Intent
+- android.content.BroadcastReceiver
+- android.content.IntentFilter
+- android.widget (Button, TextView, LinearLayout, ScrollView, ImageView, Toast, ProgressBar)
+- android.text.SpannableStringBuilder
+- android.text.style.ForegroundColorSpan
+- android.text.style.StyleSpan
+- org.json.JSONObject
+- java.net.URL
+- java.util.concurrent.Executors
+
+OS REQUIREMENTS:
+- Minimum: Android 5.0 (API 21)
+- Target: Android 13 (API 33+)
+- Permissions: INTERNET, FOREGROUND_SERVICE, POST_NOTIFICATIONS
+
+IDE REQUIREMENTS:
+- Android Studio Arctic Fox 2020.3.1+ (minimum)
+- Android Studio Hedgehog 2023.1.1+ (recommended)
+- Gradle
+- Kotlin Plugin
 
 ---
 
 ## 5. Architettura
 
-TODO
+- MVC/MVP Pattern
+- MainActivity (UI Controller)
+- RadioService (Foreground Service)
+- AnimatedBackgroundView (Custom View - 10 waves)
+- PlayerAnimatedBackgroundView (Custom View - 6 waves)
+
 
 ---
 
-## 6. Contribuire
-
-TODO
-
 ---
 
-## 7. Licenza
+## 6. Licenza
 
 Questo progetto è distribuito sotto la licenza **GNU General Public License (GPL) v3**.
 
@@ -82,3 +133,7 @@ Questa licenza garantisce che il software rimanga libero, assicurando che qualsi
 Per i dettagli completi relativi ai diritti di utilizzo, modifica e distribuzione, consulta il file **[LICENSE](LICENSE)** incluso nel repository.
 
 ---
+
+## 7. Contatti
+
+Per collaborare al progetto scrivere una mail con oggetto "RICHIESTA COLLABORAZIONE APP ANDROID" all'indirizzo mail: _info@radioteateonair.it_
