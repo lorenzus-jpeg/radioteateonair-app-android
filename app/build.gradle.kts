@@ -11,8 +11,8 @@ android {
         applicationId = "it.teateonair.app"
         minSdk = 33
         targetSdk = 35
-        versionCode = 4
-        versionName = "TOA - 4"
+        versionCode = 5
+        versionName = "v1.0.0_TOA-5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true

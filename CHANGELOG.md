@@ -4,6 +4,20 @@ Tutte le modifiche importanti a questo progetto saranno documentate in questo fi
 
 ---
 
+## [TOA-5] - 2025-10-22
+
+### Added
+- Batteria di test cases a validazione del MVP.
+
+### Changed
+- Icone mipmap-xxxhdpi.
+- 
+### Fixed
+
+### Removed
+
+---
+
 ## [TOA-4] - 2025-10-09
 
 ### Added
