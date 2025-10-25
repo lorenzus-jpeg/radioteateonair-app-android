@@ -38,6 +38,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
+import androidx.core.view.WindowCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import org.json.JSONObject
 import org.jsoup.Jsoup
@@ -144,31 +145,35 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupSystemUI() {
-        ViewCompat.setOnApplyWindowInsetsListener(topInsetSpacer) { view, insets ->
-            val statusBarHeight = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
-            view.updateLayoutParams<androidx.constraintlayout.widget.ConstraintLayout.LayoutParams> {
-                height = statusBarHeight
-            }
-            insets
-        }
+        // Enable edge-to-edge for all Android versions
+        // This is mandatory for Android 15+ (SDK 35) and provides backward compatibility
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
-        ViewCompat.setOnApplyWindowInsetsListener(bottomInsetSpacer) { view, insets ->
-            val navBarHeight = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
-            view.updateLayoutParams<androidx.constraintlayout.widget.ConstraintLayout.LayoutParams> {
-                height = navBarHeight
-            }
-            insets
-        }
-
-        @Suppress("DEPRECATION")
+        // Make status bar and navigation bar transparent
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             window.statusBarColor = Color.TRANSPARENT
             window.navigationBarColor = Color.TRANSPARENT
+        }
 
-            // For API 30+ (Android 11), use the new method
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                window.setDecorFitsSystemWindows(false)
+        // Handle window insets for edge-to-edge display
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main_container)) { view, windowInsets ->
+            val insets = windowInsets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or
+                        WindowInsetsCompat.Type.displayCutout()
+            )
+
+            // Apply status bar inset to top spacer
+            topInsetSpacer.updateLayoutParams<androidx.constraintlayout.widget.ConstraintLayout.LayoutParams> {
+                height = insets.top
             }
+
+            // Apply navigation bar inset to bottom spacer
+            bottomInsetSpacer.updateLayoutParams<androidx.constraintlayout.widget.ConstraintLayout.LayoutParams> {
+                height = insets.bottom
+            }
+
+            // Return CONSUMED to prevent the insets from being passed down to child views
+            WindowInsetsCompat.CONSUMED
         }
     }
 
@@ -212,6 +217,12 @@ class MainActivity : AppCompatActivity() {
             val url = "https://www.youtube.com/@radioteateonair4409"
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
         }
+
+        findViewById<View>(R.id.socialSpotify).setOnClickListener {
+            val url = "https://open.spotify.com/user/bdubob5m8sthl8504ab0xx88y"
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        }
+
     }
 
     private fun handlePlayerClick() {
