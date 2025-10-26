@@ -109,6 +109,8 @@ class MainActivity : AppCompatActivity() {
         registerRadioStateReceiver()
 
         handler = Handler(Looper.getMainLooper())
+
+        CacheManager.prefetchAll()
     }
 
     private fun registerRadioStateReceiver() {
@@ -421,27 +423,24 @@ class MainActivity : AppCompatActivity() {
                             .getString("yp_currently_playing")
 
                         val parts = fullTitle.split(" - ", limit = 2)
-                        val artist = parts.getOrNull(0)?.trim() ?: getString(R.string.unknown_artist)
-                        val song = parts.getOrNull(1)?.trim() ?: getString(R.string.unknown_title)
+                        val artist = if (parts.isNotEmpty()) parts[0] else "Teate On Air"
+                        val song = if (parts.size > 1) parts[1] else "In onda"
 
-                        handler.post {
-                            updateSongInfo(artist, song)
-                            isFirstLoad = false
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        handler.post {
-                            if (isFirstLoad) {
-                                artistName.text = getString(R.string.sample_title)
-                                songTitle.text = ""
+                        runOnUiThread {
+                            if (isPlaying) {
+                                songTitle.text = song
+                                artistName.text = artist
                                 adjustTextSizes()
                             }
                         }
-                    } finally {
-                        if (isPlaying) {
-                            handler.postDelayed(this, 2000)
-                        }
+
+                    } catch (e: Exception) {
+                        e.printStackTrace()
                     }
+                }
+
+                if (isPlaying) {
+                    handler.postDelayed(this, 5000)
                 }
             }
         }
@@ -449,770 +448,48 @@ class MainActivity : AppCompatActivity() {
         handler.post(updateTask)
     }
 
-    private fun updateSongInfo(artist: String, song: String) {
-        artistName.text = artist
-        songTitle.text = song
-
-        handler.postDelayed({
-            setupMarqueeForTitle()
-        }, 100)
-
-        adjustTextSizes()
-    }
-
-    private fun setupMarqueeForTitle() {
-        songTitle.apply {
-            ellipsize = TextUtils.TruncateAt.MARQUEE
-            marqueeRepeatLimit = -1
-            isSingleLine = true
-            isSelected = true
-            isFocusable = true
-            isFocusableInTouchMode = true
-
-            post {
-                requestFocus()
-            }
-        }
-
-        artistName.apply {
-            ellipsize = TextUtils.TruncateAt.MARQUEE
-            marqueeRepeatLimit = -1
-            isSingleLine = true
-            isSelected = true
-            isFocusable = true
-            isFocusableInTouchMode = true
-
-            post {
-                requestFocus()
-            }
-        }
-    }
-
     private fun adjustTextSizes() {
-        val availableWidth = getAvailableTextWidth()
-        if (availableWidth <= 0) return
+        if (bottomBar.width <= 0) return
 
-        adjustTextSize(artistName, availableWidth, 8f, 12f)
-        adjustTextSize(songTitle, availableWidth, 9f, 14f)
-    }
+        val maxWidth = (bottomBar.width * 0.65f).toInt()
 
-    private fun getAvailableTextWidth(): Int {
-        val playButtonWidth = 48 * resources.displayMetrics.density.toInt()
-        val padding = resources.getDimensionPixelSize(R.dimen.song_info_padding) * 2
-        val margins = resources.getDimensionPixelSize(R.dimen.bottom_bar_padding) * 2
+        songTitle.post {
+            var currentSize = 20f
+            songTitle.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, currentSize)
 
-        return bottomBar.width - playButtonWidth - padding - margins - 100
-    }
-
-    private fun adjustTextSize(textView: TextView, availableWidth: Int, minSize: Float, maxSize: Float) {
-        if (availableWidth <= 0) return
-
-        val paint = Paint()
-        paint.typeface = textView.typeface
-
-        var currentSize = maxSize
-        val text = textView.text.toString()
-
-        if (textView == songTitle) {
-            when {
-                text.length <= 20 -> currentSize = maxSize
-                text.length <= 35 -> currentSize = maxSize * 0.9f
-                text.length <= 50 -> currentSize = maxSize * 0.8f
-                else -> currentSize = maxSize * 0.7f
-            }
-        } else {
-            paint.textSize = currentSize * resources.displayMetrics.scaledDensity
-
-            while (currentSize > minSize && paint.measureText(text) > availableWidth) {
+            while (songTitle.paint.measureText(songTitle.text.toString()) > maxWidth && currentSize > 10f) {
                 currentSize -= 0.5f
-                paint.textSize = currentSize * resources.displayMetrics.scaledDensity
+                songTitle.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, currentSize)
             }
+
+            songTitle.ellipsize = TextUtils.TruncateAt.END
+            songTitle.maxLines = 1
         }
 
-        textView.animate()
-            .scaleX(1f)
-            .scaleY(1f)
-            .setDuration(200)
-            .withEndAction {
-                textView.textSize = currentSize
+        artistName.post {
+            var currentSize = 16f
+            artistName.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, currentSize)
+
+            while (artistName.paint.measureText(artistName.text.toString()) > maxWidth && currentSize > 8f) {
+                currentSize -= 0.5f
+                artistName.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, currentSize)
             }
-            .start()
+
+            artistName.ellipsize = TextUtils.TruncateAt.END
+            artistName.maxLines = 1
+        }
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
     private fun showImprovedPalinsestoModal(url: String) {
-        val dialog = Dialog(this)
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-
-        val mainLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Color.parseColor("#1a1a1a"))
-            setPadding(0, 0, 0, 0)
-        }
-
-        val headerLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            setBackgroundColor(Color.parseColor("#00FF88"))
-            setPadding(24, 16, 16, 16)
-            gravity = Gravity.CENTER_VERTICAL
-        }
-
-        val titleText = TextView(this).apply {
-            text = "Palinsesto Oggi"
-            textSize = 18f
-            setTextColor(Color.BLACK)
-            typeface = Typeface.DEFAULT_BOLD
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-        }
-
-        val closeButton = ImageView(this).apply {
-            setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
-            layoutParams = LinearLayout.LayoutParams(48, 48)
-            setPadding(12, 12, 12, 12)
-            background = createRippleDrawable()
-            setOnClickListener { dialog.dismiss() }
-        }
-
-        headerLayout.addView(titleText)
-        headerLayout.addView(closeButton)
-
-        val progressLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER
-            setPadding(24, 32, 24, 32)
-            setBackgroundColor(Color.parseColor("#1a1a1a"))
-        }
-
-        val progressBar = ProgressBar(this).apply {
-            layoutParams = LinearLayout.LayoutParams(48, 48)
-            indeterminateDrawable.setColorFilter(Color.parseColor("#00FF88"), android.graphics.PorterDuff.Mode.SRC_IN)
-        }
-
-        val loadingText = TextView(this).apply {
-            text = "Caricamento in corso..."
-            textSize = 16f
-            setTextColor(Color.parseColor("#00FF88"))
-            setPadding(24, 0, 0, 0)
-        }
-
-        progressLayout.addView(progressBar)
-        progressLayout.addView(loadingText)
-
-        val webView = WebView(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT
-            )
-            setBackgroundColor(Color.WHITE)
-            visibility = View.GONE
-
-            settings.apply {
-                javaScriptEnabled = true
-                domStorageEnabled = true
-                cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
-                loadWithOverviewMode = true
-                useWideViewPort = true
-                builtInZoomControls = false
-                displayZoomControls = false
-                setSupportZoom(false)
-            }
-        }
-
-        fun showErrorContent() {
-            val errorHtml = """
-                <html>
-                <body style='padding:40px; font-family:sans-serif; text-align:center; background:#f8f9fa;'>
-                    <div style='background:white; padding:32px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);'>
-                        <h3 style='color:#dc3545; margin-bottom:16px;'>⚠️ Errore di connessione</h3>
-                        <p style='color:#6c757d; margin-bottom:24px;'>Impossibile caricare il palinsesto. Controlla la connessione internet e riprova.</p>
-                        <button onclick='window.location.reload()' style='background:#00FF88; color:white; border:none; padding:12px 24px; border-radius:8px; font-size:14px; cursor:pointer;'>
-                            Riprova
-                        </button>
-                    </div>
-                </body>
-                </html>
-            """.trimIndent()
-
-            webView.loadData(errorHtml, "text/html", "UTF-8")
-        }
-
-        webView.webViewClient = createWebViewClient("https://radioteateonair.it/palinsesto", progressLayout)
-
-        mainLayout.addView(headerLayout)
-        mainLayout.addView(progressLayout)
-        mainLayout.addView(webView)
-
-        dialog.setContentView(mainLayout)
-
-        dialog.window?.let { window ->
-            window.setLayout(
-                (resources.displayMetrics.widthPixels * 0.95).toInt(),
-                (resources.displayMetrics.heightPixels * 0.80).toInt()
-            )
-            window.setGravity(Gravity.CENTER)
-            window.setBackgroundDrawableResource(android.R.color.transparent)
-
-            val drawable = GradientDrawable().apply {
-                shape = GradientDrawable.RECTANGLE
-                cornerRadius = 16f * resources.displayMetrics.density
-                setColor(Color.parseColor("#1a1a1a"))
-            }
-            window.setBackgroundDrawable(drawable)
-        }
-
-        dialog.show()
-
-        Thread {
-            try {
-                val connection = java.net.URL(url).openConnection()
-                connection.connectTimeout = 3000
-                connection.readTimeout = 5000
-
-                val doc = Jsoup.parse(connection.getInputStream(), "UTF-8", url)
-
-                val dayNames = listOf("Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato")
-                val todayIndex = Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 1
-                val todayName = dayNames[todayIndex]
-
-                val allScheduleDivs = doc.select("div.qt-part-show-schedule-day-item").toList()
-
-                val filteredDivs = allScheduleDivs.filter { element ->
-                    element.select("span.qt-day").any { daySpan ->
-                        daySpan.text().equals(todayName, ignoreCase = true)
-                    }
-                }
-
-                filteredDivs.forEach { div ->
-                    div.select(".qt-header-bg").forEach { bgDiv ->
-                        val bgUrl = bgDiv.attr("data-bgimage")
-                        if (bgUrl.isNotEmpty()) {
-                            bgDiv.attr(
-                                "style",
-                                "background-image:url('$bgUrl'); background-size:cover; background-position:center; background-repeat:no-repeat;"
-                            )
-                        }
-                    }
-                }
-
-                val finalContent = if (filteredDivs.isNotEmpty()) {
-                    filteredDivs.joinToString("\n") { it.outerHtml() }
-                } else {
-                    "<p>Nessun programma rimasto per $todayName</p>"
-                }
-
-                val cssLinks = doc.select("link[rel=stylesheet]").joinToString("\n") {
-                    """<link rel="stylesheet" href="${it.absUrl("href")}">"""
-                }
-
-                val fullHtml = """
-                    <html>
-                        <head>
-                            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-                            $cssLinks
-                            <style>
-                                body { 
-                                    margin: 0; 
-                                    padding: 16px; 
-                                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-                                    background: #fff; 
-                                    color: #000; 
-                                    line-height: 1.4;
-                                    font-size: 14px;
-                                }
-                                img, iframe { 
-                                    max-width: 100% !important; 
-                                    height: auto !important; 
-                                    display: block; 
-                                    margin: 8px auto; 
-                                }
-                                .qt-header-bg {
-                                    min-height: 120px;
-                                    background-size: cover !important;
-                                    background-position: center !important;
-                                    background-repeat: no-repeat !important;
-                                    border-radius: 8px;
-                                    margin-bottom: 16px;
-                                }
-                                .qt-part-show-schedule-day-item {
-                                    margin-bottom: 20px;
-                                    padding: 12px;
-                                    border-radius: 8px;
-                                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                                }
-                                @media (max-width: 600px) {
-                                    body { padding: 12px; font-size: 13px; }
-                                    .qt-header-bg { min-height: 100px; }
-                                }
-                                @media (min-width: 768px) {
-                                    body { padding: 24px; font-size: 16px; }
-                                    .qt-header-bg { min-height: 160px; }
-                                }
-                            </style>
-                        </head>
-                        <body>
-                            $finalContent
-                        </body>
-                    </html>
-                """.trimIndent()
-
-                runOnUiThread {
-                    if (dialog.isShowing) {
-                        webView.loadDataWithBaseURL(url, fullHtml, "text/html", "UTF-8", null)
-                    }
-                }
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-                runOnUiThread {
-                    if (dialog.isShowing) {
-                        showErrorContent()
-                    }
-                }
-            }
-        }.start()
+        ScheduleModal(this).show(url)
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
     private fun showProgramsModal() {
-        val dialog = Dialog(this)
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-
-        val mainLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Color.parseColor("#1a1a1a"))
-            setPadding(0, 0, 0, 0)
-        }
-
-        val headerLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            setBackgroundColor(Color.parseColor("#00FF88"))
-            setPadding(24, 16, 16, 16)
-            gravity = Gravity.CENTER_VERTICAL
-        }
-
-        val titleText = TextView(this).apply {
-            text = "Programmi"
-            textSize = 18f
-            setTextColor(Color.BLACK)
-            typeface = Typeface.DEFAULT_BOLD
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-        }
-
-        val closeButton = ImageView(this).apply {
-            setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
-            layoutParams = LinearLayout.LayoutParams(48, 48)
-            setPadding(12, 12, 12, 12)
-            background = createRippleDrawable()
-            setOnClickListener { dialog.dismiss() }
-        }
-
-        headerLayout.addView(titleText)
-        headerLayout.addView(closeButton)
-
-        val progressLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER
-            setPadding(24, 32, 24, 32)
-            setBackgroundColor(Color.parseColor("#1a1a1a"))
-        }
-
-        val progressBar = ProgressBar(this).apply {
-            layoutParams = LinearLayout.LayoutParams(48, 48)
-            indeterminateDrawable.setColorFilter(Color.parseColor("#00FF88"), android.graphics.PorterDuff.Mode.SRC_IN)
-        }
-
-        val loadingText = TextView(this).apply {
-            text = "Caricamento in corso..."
-            textSize = 16f
-            setTextColor(Color.parseColor("#00FF88"))
-            setPadding(24, 0, 0, 0)
-        }
-
-        progressLayout.addView(progressBar)
-        progressLayout.addView(loadingText)
-
-        val webView = WebView(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT
-            )
-            setBackgroundColor(Color.WHITE)
-            visibility = View.GONE
-
-            settings.apply {
-                javaScriptEnabled = true
-                domStorageEnabled = true
-                cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
-                loadWithOverviewMode = true
-                useWideViewPort = true
-                builtInZoomControls = false
-                displayZoomControls = false
-                setSupportZoom(false)
-            }
-        }
-
-        fun showErrorContent() {
-            val errorHtml = """
-            <html>
-            <body style='padding:40px; font-family:sans-serif; text-align:center; background:#f8f9fa;'>
-                <div style='background:white; padding:32px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);'>
-                    <h3 style='color:#dc3545; margin-bottom:16px;'>⚠️ Errore di connessione</h3>
-                    <p style='color:#6c757d; margin-bottom:24px;'>Impossibile caricare i programmi. Controlla la connessione internet e riprova.</p>
-                    <button onclick='window.location.reload()' style='background:#00FF88; color:white; border:none; padding:12px 24px; border-radius:8px; font-size:14px; cursor:pointer;'>
-                        Riprova
-                    </button>
-                </div>
-            </body>
-            </html>
-        """.trimIndent()
-
-            webView.loadData(errorHtml, "text/html", "UTF-8")
-        }
-
-        webView.webViewClient = createWebViewClient("https://www.radioteateonair.it/programmi/", progressLayout)
-
-        mainLayout.addView(headerLayout)
-        mainLayout.addView(progressLayout)
-        mainLayout.addView(webView)
-
-        dialog.setContentView(mainLayout)
-
-        dialog.window?.let { window ->
-            window.setLayout(
-                (resources.displayMetrics.widthPixels * 0.95).toInt(),
-                (resources.displayMetrics.heightPixels * 0.80).toInt()
-            )
-            window.setGravity(Gravity.CENTER)
-            window.setBackgroundDrawableResource(android.R.color.transparent)
-
-            val drawable = GradientDrawable().apply {
-                shape = GradientDrawable.RECTANGLE
-                cornerRadius = 16f * resources.displayMetrics.density
-                setColor(Color.parseColor("#1a1a1a"))
-            }
-            window.setBackgroundDrawable(drawable)
-        }
-
-        dialog.show()
-
-        // Parse the programs page with Jsoup
-        Thread {
-            try {
-                val connection = java.net.URL("https://www.radioteateonair.it/programmi/").openConnection()
-                connection.connectTimeout = 3000
-                connection.readTimeout = 5000
-
-                val doc = Jsoup.parse(connection.getInputStream(), "UTF-8", "https://www.radioteateonair.it/programmi/")
-
-                // Remove any element containing "PROGRAMMI" text
-                doc.select("*").forEach { element ->
-                    if (element.ownText().equals("PROGRAMMI", ignoreCase = true)) {
-                        element.remove()
-                    }
-                }
-
-                // Style "podcast attivi" and "podcast archiviati" elements
-                doc.select("*").forEach { element ->
-                    val text = element.ownText().lowercase()
-                    if (text.contains("podcast attivi") || text.contains("podcast archiviati")) {
-                        element.attr("style", "${element.attr("style")}; color: black !important; font-variant: small-caps !important; font-weight: bold !important;")
-                    }
-                }
-
-                // Try multiple selectors to find program elements
-                val programs = doc.select("article, .program-item, .post, .entry, .content-item, .program, .show").ifEmpty {
-                    // If no specific program elements found, try broader selectors
-                    doc.select("div[class*='program'], div[class*='show'], div[class*='post']").ifEmpty {
-                        // Last resort: get all divs with headings
-                        doc.select("div:has(h1), div:has(h2), div:has(h3)")
-                    }
-                }
-
-                val finalContent = if (programs.isNotEmpty()) {
-                    // Process and clean up the program elements
-                    val processedPrograms = programs.map { program ->
-                        // Remove unwanted elements like navigation, sidebar, etc.
-                        program.select("nav, .nav, .navigation, .sidebar, .widget, script, style").remove()
-
-                        // Find and enhance images
-                        program.select("img").forEach { img ->
-                            val src = img.attr("src")
-                            if (src.isNotEmpty()) {
-                                if (src.startsWith("/")) {
-                                    img.attr("src", "https://www.radioteateonair.it$src")
-                                }
-                                img.attr("style", "max-width: 100%; height: auto; border-radius: 8px; margin: 8px 0;")
-                            }
-                        }
-
-                        // Add styling to program containers
-                        program.attr("style", "margin-bottom: 24px; padding: 16px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); background: white;")
-
-                        program.outerHtml()
-                    }.joinToString("\n")
-
-                    processedPrograms
-                } else {
-                    // Fallback: get the main content
-                    val mainContent = doc.select("main, .main, .content, .site-content, #content, .entry-content").first()
-
-                    mainContent?.let { content ->
-                        // Clean up the content
-                        content.select("nav, .nav, .navigation, .sidebar, .widget, script, style, header, footer").remove()
-
-                        // Fix image URLs
-                        content.select("img").forEach { img ->
-                            val src = img.attr("src")
-                            if (src.startsWith("/")) {
-                                img.attr("src", "https://www.radioteateonair.it$src")
-                            }
-                        }
-
-                        content.html()
-                    } ?: "<div style='text-align: center; padding: 40px;'><p>Nessun programma trovato. Visita il sito web per maggiori informazioni.</p></div>"
-                }
-
-                // Get CSS links for styling
-                val cssLinks = doc.select("link[rel=stylesheet]").take(5).joinToString("\n") {
-                    """<link rel="stylesheet" href="${it.absUrl("href")}">"""
-                }
-
-                val fullHtml = """
-            <html>
-                <head>
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-                    $cssLinks
-                    <style>
-                        body { 
-                            margin: 0; 
-                            padding: 16px; 
-                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-                            background: #f8f9fa; 
-                            color: #333; 
-                            line-height: 1.5;
-                            font-size: 14px;
-                        }
-                        img { 
-                            max-width: 100% !important; 
-                            height: auto !important; 
-                            display: block; 
-                            margin: 8px auto; 
-                            border-radius: 8px;
-                        }
-                        h1, h2, h3, h4, h5, h6 {
-                            color: #00FF88;
-                            margin-top: 20px;
-                            margin-bottom: 12px;
-                        }
-                        p {
-                            margin-bottom: 16px;
-                            color: #555;
-                        }
-                        a {
-                            color: #00FF88;
-                            text-decoration: none;
-                        }
-                        a:hover {
-                            text-decoration: underline;
-                        }
-                        .program-item, article, .post {
-                            background: white;
-                            margin-bottom: 20px;
-                            padding: 16px;
-                            border-radius: 12px;
-                            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                        }
-                        /* Special styling for podcast section headers */
-                        *[style*="small-caps"] {
-                            color: black !important;
-                            font-variant: small-caps !important;
-                            font-weight: bold !important;
-                        }
-                        @media (max-width: 600px) {
-                            body { padding: 12px; font-size: 13px; }
-                        }
-                        @media (min-width: 768px) {
-                            body { padding: 24px; font-size: 16px; }
-                        }
-                    </style>
-                </head>
-                <body>
-                    $finalContent
-                </body>
-            </html>
-        """.trimIndent()
-
-                runOnUiThread {
-                    if (dialog.isShowing) {
-                        webView.loadDataWithBaseURL("https://www.radioteateonair.it/programmi/", fullHtml, "text/html", "UTF-8", null)
-                    }
-                }
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-                runOnUiThread {
-                    if (dialog.isShowing) {
-                        showErrorContent()
-                    }
-                }
-            }
-        }.start()
+        ProgramsModal(this).show()
     }
 
-    /**
-     * Helper function to make specific words green and bold in a text
-     * @param fullText The complete text
-     * @param wordsToHighlight List of words/phrases to make green and bold
-     * @return SpannableStringBuilder with styled text
-     */
-    private fun createStyledText(fullText: String, wordsToHighlight: List<String>): SpannableStringBuilder {
-        val spannableBuilder = SpannableStringBuilder(fullText)
-        val greenColor = Color.parseColor("#00FF88")
-
-        wordsToHighlight.forEach { word ->
-            var startIndex = 0
-            while (startIndex != -1) {
-                startIndex = fullText.indexOf(word, startIndex, ignoreCase = true)
-                if (startIndex != -1) {
-                    val endIndex = startIndex + word.length
-
-                    // Apply green color
-                    spannableBuilder.setSpan(
-                        ForegroundColorSpan(greenColor),
-                        startIndex,
-                        endIndex,
-                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                    )
-
-                    // Apply bold style
-                    spannableBuilder.setSpan(
-                        StyleSpan(Typeface.BOLD),
-                        startIndex,
-                        endIndex,
-                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                    )
-
-                    startIndex = endIndex
-                }
-            }
-        }
-
-        return spannableBuilder
-    }
-
-    // Updated showAboutUsModal function
     private fun showAboutUsModal() {
-        val dialog = Dialog(this)
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-
-        val mainLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Color.parseColor("#1a1a1a"))
-            setPadding(0, 0, 0, 0)
-        }
-
-        val headerLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            setBackgroundColor(Color.parseColor("#00FF88"))
-            setPadding(24, 16, 16, 16)
-            gravity = Gravity.CENTER_VERTICAL
-        }
-
-        val titleText = TextView(this).apply {
-            text = "Chi Siamo"
-            textSize = 18f
-            setTextColor(Color.BLACK)
-            typeface = Typeface.DEFAULT_BOLD
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-        }
-
-        val closeButton = ImageView(this).apply {
-            setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
-            layoutParams = LinearLayout.LayoutParams(48, 48)
-            setPadding(12, 12, 12, 12)
-            background = createRippleDrawable()
-            setOnClickListener { dialog.dismiss() }
-        }
-
-        headerLayout.addView(titleText)
-        headerLayout.addView(closeButton)
-
-        val scrollView = ScrollView(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT
-            )
-            setBackgroundColor(Color.WHITE)
-        }
-
-        val contentLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(32, 32, 32, 32)
-        }
-
-        // Get the text content
-        val aboutUsText = getString(R.string.about_us_content)
-
-        // Define which words/phrases you want to be green and bold
-        val wordsToHighlight = listOf(
-            "Erga Omnes",
-            "musica",
-            "Teate On Air",
-            "Chieti"
-            // Add more words you want to highlight
-        )
-
-        // Create styled text
-        val styledText = createStyledText(aboutUsText, wordsToHighlight)
-
-        val textView = TextView(this).apply {
-            text = styledText  // Use the styled text instead of plain text
-            textSize = 14f
-            setTextColor(Color.parseColor("#2c3e50"))
-
-            typeface = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                Typeface.create("sans-serif-light", Typeface.NORMAL)
-            } else {
-                Typeface.DEFAULT
-            }
-
-            setLineSpacing(12f, 1.15f)
-            letterSpacing = 0.02f
-            setPadding(0, 0, 0, 24)
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                justificationMode = LineBreaker.JUSTIFICATION_MODE_INTER_WORD
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                justificationMode = LineBreaker.JUSTIFICATION_MODE_INTER_WORD
-            }
-
-            setShadowLayer(1f, 0f, 1f, Color.parseColor("#10000000"))
-        }
-
-        contentLayout.addView(textView)
-        scrollView.addView(contentLayout)
-        mainLayout.addView(headerLayout)
-        mainLayout.addView(scrollView)
-
-        dialog.setContentView(mainLayout)
-
-        dialog.window?.let { window ->
-            window.setLayout(
-                (resources.displayMetrics.widthPixels * 0.95).toInt(),
-                (resources.displayMetrics.heightPixels * 0.80).toInt()
-            )
-            window.setGravity(Gravity.CENTER)
-            window.setBackgroundDrawableResource(android.R.color.transparent)
-
-            val drawable = GradientDrawable().apply {
-                shape = GradientDrawable.RECTANGLE
-                cornerRadius = 16f * resources.displayMetrics.density
-                setColor(Color.parseColor("#1a1a1a"))
-            }
-            window.setBackgroundDrawable(drawable)
-        }
-
-        dialog.show()
+        WhoWeAre(this).show()
     }
 
     private fun createRippleDrawable(): Drawable {
@@ -1255,7 +532,7 @@ class MainActivity : AppCompatActivity() {
                 handler.postDelayed({
                     progressLayout.visibility = View.GONE
                     view?.visibility = View.VISIBLE
-                }, 300)
+                }, 100)
             }
 
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
