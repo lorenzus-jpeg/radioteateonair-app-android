@@ -4,6 +4,12 @@ Tutte le modifiche importanti a questo progetto saranno documentate in questo fi
 
 ---
 
+## [TOA-6] - 2025-10-28
+
+### Added
+- URL del profilo Spotify ed icona associata.
+
+
 ## [TOA-5] - 2025-10-22
 
 ### Added
