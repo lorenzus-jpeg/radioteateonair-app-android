@@ -43,26 +43,8 @@ class PlayerAnimatedBackgroundView : View {
     }
 
     private fun setupAnimator() {
-        animator = ValueAnimator.ofFloat(0f, Float.MAX_VALUE).apply {
-            duration = Long.MAX_VALUE
-            repeatCount = 0
-            interpolator = LinearInterpolator()
-
-            addUpdateListener { _ ->
-                val currentTime = System.currentTimeMillis()
-                val timeSeconds = currentTime / 1000.0
-
-                waveOffset1 = (timeSeconds * 20.0).toFloat()
-                waveOffset2 = (timeSeconds * 15.0).toFloat()
-                waveOffset3 = (timeSeconds * 25.0).toFloat()
-                waveOffset4 = (timeSeconds * 18.0).toFloat()
-                waveOffset5 = (timeSeconds * 22.0).toFloat()
-                waveOffset6 = (timeSeconds * 12.0).toFloat()
-
-                invalidate()
-            }
-            start()
-        }
+        // Animator disabled - no waves to animate
+        // The player bar will just show a static white background
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -85,10 +67,11 @@ class PlayerAnimatedBackgroundView : View {
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        // Clip to rounded rectangle before drawing waves
+        // Clip to rounded rectangle
         clipPath?.let { canvas.clipPath(it) }
 
-        drawPlayerWaveOverlay(canvas)
+        // Draw transparent background (no waves, no solid color)
+        canvas.drawColor(Color.TRANSPARENT)
     }
 
     private fun drawPlayerWaveOverlay(canvas: Canvas) {
@@ -175,20 +158,16 @@ class PlayerAnimatedBackgroundView : View {
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        animator?.start()
+        // No animation to start - static white background
     }
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
-        animator?.cancel()
+        // No animation to cancel - static white background
     }
 
     override fun onVisibilityChanged(changedView: View, visibility: Int) {
         super.onVisibilityChanged(changedView, visibility)
-        if (visibility == VISIBLE) {
-            animator?.start()
-        } else {
-            animator?.pause()
-        }
+        // No animation to manage - static white background
     }
 }

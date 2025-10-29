@@ -354,7 +354,7 @@
             android:layout_height="wrap_content"
             android:text="@string/follow_us"
             android:textColor="@color/green_primary"
-            android:textSize="12sp"
+            android:textSize="16sp"
             android:textAllCaps="true"
             android:fontFamily="sans-serif-condensed"
             android:letterSpacing="0.2"
