@@ -12,16 +12,16 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 @SmallTest
-class PlayerAnimatedBackgroundViewTest {
+class {
 
     private lateinit var context: Context
-    private lateinit var view: PlayerAnimatedBackgroundView
+    private lateinit var view: `PlayerAnimatedBackgroundView - removethis`
 
     @Before
     fun setup() {
         context = ApplicationProvider.getApplicationContext()
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            view = PlayerAnimatedBackgroundView(context)
+            view = `PlayerAnimatedBackgroundView - removethis`(context)
         }
     }
 
@@ -33,7 +33,7 @@ class PlayerAnimatedBackgroundViewTest {
     @Test
     fun testViewCreationWithContext() {
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            val testView = PlayerAnimatedBackgroundView(context)
+            val testView = `PlayerAnimatedBackgroundView - removethis`(context)
             assert(testView.width >= 0)
         }
     }
@@ -41,7 +41,7 @@ class PlayerAnimatedBackgroundViewTest {
     @Test
     fun testViewWithAttributeSet() {
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            val viewWithAttrs = PlayerAnimatedBackgroundView(context, null)
+            val viewWithAttrs = `PlayerAnimatedBackgroundView - removethis`(context, null)
             assert(viewWithAttrs.width >= 0)
         }
     }
@@ -49,7 +49,7 @@ class PlayerAnimatedBackgroundViewTest {
     @Test
     fun testViewWithDefStyleAttr() {
         InstrumentationRegistry.getInstrumentation().runOnMainSync {
-            val viewWithStyle = PlayerAnimatedBackgroundView(context, null, 0)
+            val viewWithStyle = `PlayerAnimatedBackgroundView - removethis`(context, null, 0)
             assert(viewWithStyle.width >= 0)
         }
     }
