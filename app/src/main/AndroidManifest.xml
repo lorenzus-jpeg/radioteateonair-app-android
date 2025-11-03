@@ -1,7 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="it.teateonair.app">
 
-    <!-- Required permissions -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -15,7 +14,6 @@
         android:label="Teate On Air"
         android:theme="@style/Theme.Radioteateonair.NoActionBar">
 
-        <!-- Your MainActivity -->
         <activity
             android:name=".MainActivity"
             android:exported="true" >
@@ -25,7 +23,6 @@
             </intent-filter>
         </activity>
 
-        <!-- Enhanced RadioService with media session support -->
         <service
             android:name=".RadioService"
             android:exported="false"

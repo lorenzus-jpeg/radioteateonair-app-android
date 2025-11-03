@@ -1,11 +1,5 @@
 package it.teateonair.app
-import android.graphics.Typeface
-import android.text.SpannableStringBuilder
-import android.text.Spanned
-import android.text.style.ForegroundColorSpan
-import android.text.style.StyleSpan
-import android.annotation.SuppressLint
-import android.app.Dialog
+
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -23,12 +17,9 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.text.TextUtils
-import android.view.Gravity
 import android.view.View
-import android.view.Window
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
-import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.*
@@ -41,13 +32,9 @@ import androidx.core.view.updateLayoutParams
 import androidx.core.view.WindowCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import org.json.JSONObject
-import org.jsoup.Jsoup
 import java.net.URL
-import java.util.*
 import java.util.concurrent.Executors
 import android.graphics.Color
-import android.text.Layout
-import android.graphics.text.LineBreaker
 import android.widget.TextView
 
 class MainActivity : AppCompatActivity() {
@@ -162,10 +149,10 @@ class MainActivity : AppCompatActivity() {
     private fun setupSystemUI() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            window.statusBarColor = Color.TRANSPARENT
-            window.navigationBarColor = Color.TRANSPARENT
-        }
+        //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        //    window.statusBarColor = Color.TRANSPARENT
+        //window.navigationBarColor = Color.TRANSPARENT
+        //}
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main_container)) { view, windowInsets ->
             val insets = windowInsets.getInsets(

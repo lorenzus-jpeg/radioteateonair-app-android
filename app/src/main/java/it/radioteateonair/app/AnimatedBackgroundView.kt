@@ -12,10 +12,6 @@ import kotlin.math.*
  * Animated background view that displays multiple layered wave animations.
  * One white wave is always visible and highly variable for visual interest.
  *
- * The waves use sine wave patterns with multiple frequencies combined to create
- * a natural, organic movement. Layer 5 is designated as the white wave with enhanced
- * variability, while the other 9 layers display green waves with subtle transparency.
- *
  * @property gradient Linear gradient for background (currently null for transparency)
  * @property animator ValueAnimator that drives the continuous wave animation
  * @property whiteWaveLayer Index of the layer that displays as white (always layer 5)
@@ -32,28 +28,17 @@ class AnimatedBackgroundView @JvmOverloads constructor(
     private var gradient: LinearGradient? = null
     private var animator: ValueAnimator? = null
 
-    /** Wave offset for layer 1 (30°/second rotation speed) */
     private var waveOffset1 = 0f
-    /** Wave offset for layer 2 (45°/second rotation speed) */
     private var waveOffset2 = 0f
-    /** Wave offset for layer 3 (20°/second rotation speed) */
     private var waveOffset3 = 0f
-    /** Wave offset for layer 4 (60°/second rotation speed) */
     private var waveOffset4 = 0f
-    /** Wave offset for layer 5 (15°/second rotation speed) - White wave */
     private var waveOffset5 = 0f
-    /** Wave offset for layer 6 (35°/second rotation speed) */
     private var waveOffset6 = 0f
-    /** Wave offset for layer 7 (50°/second rotation speed) */
     private var waveOffset7 = 0f
-    /** Wave offset for layer 8 (25°/second rotation speed) */
     private var waveOffset8 = 0f
-    /** Wave offset for layer 9 (40°/second rotation speed) */
     private var waveOffset9 = 0f
-    /** Wave offset for layer 10 (55°/second rotation speed) */
     private var waveOffset10 = 0f
 
-    /** White wave is always layer 5 (middle layer) */
     private val whiteWaveLayer = 5
 
     init {
@@ -67,10 +52,6 @@ class AnimatedBackgroundView @JvmOverloads constructor(
      * for all 10 layers based on system time. Each layer has a different rotation
      * speed to create complex, non-repeating wave patterns.
      *
-     * Animation speeds per layer (degrees per second):
-     * - Layer 1: 30°/s, Layer 2: 45°/s, Layer 3: 20°/s
-     * - Layer 4: 60°/s, Layer 5: 15°/s, Layer 6: 35°/s
-     * - Layer 7: 50°/s, Layer 8: 25°/s, Layer 9: 40°/s, Layer 10: 55°/s
      */
     private fun setupAnimator() {
         animator = ValueAnimator.ofFloat(0f, Float.MAX_VALUE).apply {

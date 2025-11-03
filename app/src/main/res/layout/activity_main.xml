@@ -191,8 +191,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- REMOVED: PlayerAnimatedBackgroundView - waves not displayed anymore -->
-
         <!-- Start/Play button - shown initially -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/startButton"
