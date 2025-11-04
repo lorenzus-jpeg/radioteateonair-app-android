@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId = "it.teateonair.app"
-        minSdk = 33
+        minSdk = 29
         targetSdk = 35
         versionCode = 8
         versionName = "v1.2.0_TOA-7"
