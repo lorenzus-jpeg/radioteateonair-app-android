@@ -2,6 +2,11 @@
 
 Tutte le modifiche importanti a questo progetto saranno documentate in questo file.
 
+## [TOA-7] - 2025-11-04
+
+### Added
+- Supporto per versioni Android fino a SDK29.
+
 ---
 
 ## [TOA-6] - 2025-10-28
@@ -9,6 +14,7 @@ Tutte le modifiche importanti a questo progetto saranno documentate in questo fi
 ### Added
 - URL del profilo Spotify ed icona associata.
 
+---
 
 ## [TOA-5] - 2025-10-22
 
