@@ -16,7 +16,7 @@ import kotlin.math.*
  * @property animator ValueAnimator that drives the continuous wave animation
  * @property whiteWaveLayer Index of the layer that displays as white (always layer 5)
  *
- * @author lrnz
+ * @author lorenzus-jpeg
  * @since v1
  */
 class AnimatedBackgroundView @JvmOverloads constructor(

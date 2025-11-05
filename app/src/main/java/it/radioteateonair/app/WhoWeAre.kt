@@ -12,6 +12,7 @@ import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
 import android.view.Gravity
+import android.view.View
 import android.view.Window
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -79,33 +80,55 @@ class WhoWeAre(private val context: Context) {
             "Chieti"
         )
 
-        val styledText = createStyledText(aboutUsText, wordsToHighlight)
+        // Split text into paragraphs
+        val paragraphs = aboutUsText.split("\n\n")
 
-        val textView = TextView(context).apply {
-            text = styledText
-            textSize = 14f
-            setTextColor(Color.parseColor("#2c3e50"))
+        for ((index, paragraph) in paragraphs.withIndex()) {
+            if (paragraph.isNotBlank()) {
+                val styledText = createStyledText(paragraph, wordsToHighlight)
 
-            typeface = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                Typeface.create("sans-serif-light", Typeface.NORMAL)
-            } else {
-                Typeface.DEFAULT
+                val textView = TextView(context).apply {
+                    text = styledText
+                    textSize = 14f
+                    setTextColor(Color.parseColor("#2c3e50"))
+
+                    typeface = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        Typeface.create("sans-serif-light", Typeface.NORMAL)
+                    } else {
+                        Typeface.DEFAULT
+                    }
+
+                    setLineSpacing(12f, 1.15f)
+                    letterSpacing = 0.02f
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        justificationMode = LineBreaker.JUSTIFICATION_MODE_INTER_WORD
+                    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        justificationMode = LineBreaker.JUSTIFICATION_MODE_INTER_WORD
+                    }
+
+                    setShadowLayer(1f, 0f, 1f, Color.parseColor("#10000000"))
+                }
+
+                contentLayout.addView(textView)
+
+                // Add separator between paragraphs (except after the last one)
+                if (index < paragraphs.size - 1) {
+                    val separator = View(context).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            1
+                        ).apply {
+                            topMargin = 16
+                            bottomMargin = 16
+                        }
+                        setBackgroundColor(Color.parseColor("#e0e0e0"))
+                    }
+                    contentLayout.addView(separator)
+                }
             }
-
-            setLineSpacing(12f, 1.15f)
-            letterSpacing = 0.02f
-            setPadding(0, 0, 0, 24)
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                justificationMode = LineBreaker.JUSTIFICATION_MODE_INTER_WORD
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                justificationMode = LineBreaker.JUSTIFICATION_MODE_INTER_WORD
-            }
-
-            setShadowLayer(1f, 0f, 1f, Color.parseColor("#10000000"))
         }
 
-        contentLayout.addView(textView)
         scrollView.addView(contentLayout)
         mainLayout.addView(headerLayout)
         mainLayout.addView(scrollView)

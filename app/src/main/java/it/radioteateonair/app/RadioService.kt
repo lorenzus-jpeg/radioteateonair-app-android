@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * - Audio stream prefetching for instant playback
  * - Debouncing to prevent race conditions
  * - Better state management
+ * - UTF-8 encoding fix for accented characters in metadata
  */
 class RadioService : Service() {
 
@@ -62,6 +63,20 @@ class RadioService : Service() {
         setupNotificationManager()
         // Prefetch audio immediately when service is created
         prefetchAudioStream()
+    }
+
+    /**
+     * Fixes UTF-8 encoding issues where accented characters are garbled.
+     * This reverses the mojibake effect caused by UTF-8 being misinterpreted as Latin-1.
+     */
+    private fun fixUtf8Encoding(garbledText: String): String {
+        return try {
+            // Try to reverse the common UTF-8 → Latin-1 encoding error
+            garbledText.toByteArray(Charsets.ISO_8859_1).toString(Charsets.UTF_8)
+        } catch (e: Exception) {
+            // If conversion fails, return original text
+            garbledText
+        }
     }
 
     /**
@@ -240,14 +255,17 @@ class RadioService : Service() {
                     }
 
                     try {
-                        val response = URL(jsonUrl).readText()
+                        val response = URL(jsonUrl).readText(Charsets.UTF_8)
                         val json = JSONObject(response)
                         val fullTitle = json
                             .getJSONObject("icestats")
                             .getJSONObject("source")
                             .getString("yp_currently_playing")
 
-                        val parts = fullTitle.split(" - ", limit = 2)
+                        // Fix UTF-8 encoding issues with accents and special characters
+                        val fixedTitle = fixUtf8Encoding(fullTitle)
+
+                        val parts = fixedTitle.split(" - ", limit = 2)
                         val artist = parts.getOrNull(0)?.trim() ?: ""
                         val song = parts.getOrNull(1)?.trim() ?: "In caricamento..."
 
