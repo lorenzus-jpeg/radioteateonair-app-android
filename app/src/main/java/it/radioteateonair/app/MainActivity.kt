@@ -1,11 +1,5 @@
 package it.teateonair.app
-import android.graphics.Typeface
-import android.text.SpannableStringBuilder
-import android.text.Spanned
-import android.text.style.ForegroundColorSpan
-import android.text.style.StyleSpan
-import android.annotation.SuppressLint
-import android.app.Dialog
+
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -23,12 +17,9 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.text.TextUtils
-import android.view.Gravity
 import android.view.View
-import android.view.Window
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
-import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.*
@@ -41,13 +32,9 @@ import androidx.core.view.updateLayoutParams
 import androidx.core.view.WindowCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import org.json.JSONObject
-import org.jsoup.Jsoup
 import java.net.URL
-import java.util.*
 import java.util.concurrent.Executors
 import android.graphics.Color
-import android.text.Layout
-import android.graphics.text.LineBreaker
 import android.widget.TextView
 
 class MainActivity : AppCompatActivity() {
@@ -111,6 +98,19 @@ class MainActivity : AppCompatActivity() {
         handler = Handler(Looper.getMainLooper())
 
         CacheManager.prefetchAll()
+
+        prefetchAudioStream()
+    }
+
+    private fun prefetchAudioStream() {
+        val intent = Intent(this, RadioService::class.java).apply {
+            action = RadioService.ACTION_PREFETCH
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
     }
 
     private fun registerRadioStateReceiver() {
@@ -147,34 +147,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupSystemUI() {
-        // Enable edge-to-edge for all Android versions
-        // This is mandatory for Android 15+ (SDK 35) and provides backward compatibility
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
-        // Make status bar and navigation bar transparent
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            window.statusBarColor = Color.TRANSPARENT
-            window.navigationBarColor = Color.TRANSPARENT
-        }
+        //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        //    window.statusBarColor = Color.TRANSPARENT
+        //window.navigationBarColor = Color.TRANSPARENT
+        //}
 
-        // Handle window insets for edge-to-edge display
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main_container)) { view, windowInsets ->
             val insets = windowInsets.getInsets(
                 WindowInsetsCompat.Type.systemBars() or
                         WindowInsetsCompat.Type.displayCutout()
             )
 
-            // Apply status bar inset to top spacer
             topInsetSpacer.updateLayoutParams<androidx.constraintlayout.widget.ConstraintLayout.LayoutParams> {
                 height = insets.top
             }
 
-            // Apply navigation bar inset to bottom spacer
             bottomInsetSpacer.updateLayoutParams<androidx.constraintlayout.widget.ConstraintLayout.LayoutParams> {
                 height = insets.bottom
             }
 
-            // Return CONSUMED to prevent the insets from being passed down to child views
             WindowInsetsCompat.CONSUMED
         }
     }
@@ -313,54 +306,75 @@ class MainActivity : AppCompatActivity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-
         if (requestCode == NOTIFICATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                showToast("Notifiche abilitate! Tocca play per iniziare.")
+                startRadioService()
             } else {
-                showToast("Le notifiche sono necessarie per controllare la radio dalla barra delle notifiche")
+                showToast("Permesso notifiche necessario per il player")
             }
         }
     }
 
     private fun animateToPlayingState() {
-        val screenWidth = resources.displayMetrics.widthPixels
-        val targetTranslationX = -screenWidth / 2f + getResponsiveValue(80f)
-        val targetScale = getResponsiveScaleValue(0.75f)
-
-        startButton.animate()
-            .translationX(targetTranslationX)
-            .scaleX(targetScale)
-            .scaleY(targetScale)
-            .setDuration(400)
-            .withEndAction {
-                startButton.visibility = View.GONE
-                showBottomBar()
-            }
-            .start()
+        hideStartButton()
+        showBottomBar()
     }
 
     private fun animateToStoppedState() {
-        bottomBar.animate()
+        hideBottomBar()
+        showStartButton()
+    }
+
+    private fun hideStartButton() {
+        val screenWidth = resources.displayMetrics.widthPixels
+        val targetTranslationX = -screenWidth / 2f - getResponsiveValue(100f)
+
+        startButton.animate()
             .alpha(0f)
-            .setDuration(200)
+            .translationX(targetTranslationX)
+            .scaleX(getResponsiveScaleValue(0.5f))
+            .scaleY(getResponsiveScaleValue(0.5f))
+            .setDuration(400)
             .withEndAction {
-                bottomBar.visibility = View.GONE
-                showStartButton()
+                startButton.visibility = View.GONE
             }
             .start()
     }
 
     private fun showBottomBar() {
-        bottomBar.alpha = 0f
-        bottomBar.visibility = View.VISIBLE
+        val screenWidth = resources.displayMetrics.widthPixels
+        val initialTranslationX = screenWidth / 2f + getResponsiveValue(100f)
+
+        bottomBar.apply {
+            visibility = View.VISIBLE
+            alpha = 0f
+            translationX = initialTranslationX
+            scaleX = getResponsiveScaleValue(0.5f)
+            scaleY = getResponsiveScaleValue(0.5f)
+            animate()
+                .alpha(1f)
+                .translationX(0f)
+                .scaleX(1f)
+                .scaleY(1f)
+                .setDuration(400)
+                .start()
+        }
+
+        songTitle.isSelected = true
+    }
+
+    private fun hideBottomBar() {
+        val screenWidth = resources.displayMetrics.widthPixels
+        val targetTranslationX = screenWidth / 2f + getResponsiveValue(100f)
+
         bottomBar.animate()
-            .alpha(1f)
-            .setDuration(200)
+            .alpha(0f)
+            .translationX(targetTranslationX)
+            .scaleX(getResponsiveScaleValue(0.5f))
+            .scaleY(getResponsiveScaleValue(0.5f))
+            .setDuration(400)
             .withEndAction {
-                bottomBar.post {
-                    adjustTextSizes()
-                }
+                bottomBar.visibility = View.GONE
             }
             .start()
     }
@@ -513,7 +527,6 @@ class MainActivity : AppCompatActivity() {
         super.onConfigurationChanged(newConfig)
         if (isPlaying) {
             handler.postDelayed({
-                // Refresh layout after orientation change
             }, 100)
         }
     }
@@ -538,16 +551,14 @@ class MainActivity : AppCompatActivity() {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                 val url = request?.url?.toString() ?: return false
 
-                // Allow the initial allowed URL and its fragments/anchors
                 if (url.startsWith(allowedBaseUrl)) {
-                    return false // Let WebView handle it
+                    return false
                 }
 
-                // For any other URL, open in external browser
                 try {
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                     startActivity(intent)
-                    return true // Prevent WebView from loading it
+                    return true
                 } catch (e: Exception) {
                     showToast("Link non supportato")
                     return true

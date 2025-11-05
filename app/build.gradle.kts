@@ -9,10 +9,10 @@ android {
 
     defaultConfig {
         applicationId = "it.teateonair.app"
-        minSdk = 33
+        minSdk = 29
         targetSdk = 35
-        versionCode = 7
-        versionName = "v1.1.1_TOA-6"
+        versionCode = 9
+        versionName = "v1.3.0_TOA-7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
