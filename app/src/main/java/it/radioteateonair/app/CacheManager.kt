@@ -1,6 +1,7 @@
 package it.teateonair.app
 
 import org.jsoup.Jsoup
+import java.net.HttpURLConnection
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -13,30 +14,46 @@ object CacheManager {
         prefetchPrograms()
     }
 
+    /**
+     * FIXED: Properly closes URLConnection and BufferedReader
+     * Also specifies UTF-8 encoding explicitly
+     */
     private fun prefetchSchedule() {
         executor.execute {
+            var connection: HttpURLConnection? = null
             try {
-                val connection = java.net.URL("https://radioteateonair.it/palinsesto").openConnection()
+                connection = java.net.URL("https://radioteateonair.it/palinsesto")
+                    .openConnection() as HttpURLConnection
                 connection.connectTimeout = 10000
                 connection.readTimeout = 10000
-                val html = connection.getInputStream().bufferedReader().use { it.readText() }
+                connection.setRequestProperty("Accept-Charset", "UTF-8")
+
+                val html = connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
                 cache["schedule_raw"] = html
             } catch (e: Exception) {
                 e.printStackTrace()
+            } finally {
+                connection?.disconnect()  // FIXED: Added explicit disconnect
             }
         }
     }
 
     private fun prefetchPrograms() {
         executor.execute {
+            var connection: HttpURLConnection? = null
             try {
-                val connection = java.net.URL("https://www.radioteateonair.it/programmi/").openConnection()
+                connection = java.net.URL("https://www.radioteateonair.it/programmi/")
+                    .openConnection() as HttpURLConnection
                 connection.connectTimeout = 10000
                 connection.readTimeout = 10000
-                val html = connection.getInputStream().bufferedReader().use { it.readText() }
+                connection.setRequestProperty("Accept-Charset", "UTF-8")
+
+                val html = connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
                 cache["programs_raw"] = html
             } catch (e: Exception) {
                 e.printStackTrace()
+            } finally {
+                connection?.disconnect()  // FIXED: Added explicit disconnect
             }
         }
     }
@@ -82,6 +99,7 @@ object CacheManager {
             """
                 <html>
                     <head>
+                        <meta charset="UTF-8">
                         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
                         $cssLinks
                         <style>
@@ -204,6 +222,7 @@ object CacheManager {
             """
                 <html>
                     <head>
+                        <meta charset="UTF-8">
                         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
                         $cssLinks
                         <style>
@@ -270,8 +289,4 @@ object CacheManager {
         }
     }
 
-    fun refresh() {
-        cache.clear()
-        prefetchAll()
-    }
 }

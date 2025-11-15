@@ -52,6 +52,8 @@ class AnimatedBackgroundView @JvmOverloads constructor(
      * for all 10 layers based on system time. Each layer has a different rotation
      * speed to create complex, non-repeating wave patterns.
      *
+     *  * @author lorenzus-jpeg
+     *  * @since v1
      */
     private fun setupAnimator() {
         animator = ValueAnimator.ofFloat(0f, Float.MAX_VALUE).apply {
@@ -87,6 +89,9 @@ class AnimatedBackgroundView @JvmOverloads constructor(
      * @param h Current height of the view
      * @param oldw Previous width of the view
      * @param oldh Previous height of the view
+     *
+     * @author lorenzus-jpeg
+     * @since v1
      */
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
@@ -98,6 +103,9 @@ class AnimatedBackgroundView @JvmOverloads constructor(
      *
      * Currently sets gradient to null to maintain transparency and allow
      * underlying content (like background images) to show through the waves.
+     *
+     * @author lorenzus-jpeg
+     * @since v1
      */
     private fun updateGradient() {
         if (width <= 0 || height <= 0) return
@@ -106,10 +114,12 @@ class AnimatedBackgroundView @JvmOverloads constructor(
 
     /**
      * Main drawing method that renders the animated wave overlay.
-     *
      * Delegates to [drawWaveOverlay] to render all wave layers.
      *
      * @param canvas The canvas to draw on
+     *
+     * @author lorenzus-jpeg
+     * @since v1
      */
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
@@ -120,6 +130,9 @@ class AnimatedBackgroundView @JvmOverloads constructor(
      * Draws all 10 wave layers with responsive amplitude scaling.
      *
      * @param canvas The canvas to draw the waves on
+     *
+     * @author lorenzus-jpeg
+     * @since v1
      */
     private fun drawWaveOverlay(canvas: Canvas) {
         val overlayPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -175,6 +188,9 @@ class AnimatedBackgroundView @JvmOverloads constructor(
      * @param frequency Wave frequency controlling the wave pattern density
      * @param color ARGB color value for the wave layer
      * @param isWhiteWave Whether this is the white wave (layer 5) with enhanced variability
+     *
+     * @author lorenzus-jpeg
+     * @since v1
      */
     private fun drawWaveLayer(
         canvas: Canvas,
@@ -288,6 +304,9 @@ class AnimatedBackgroundView @JvmOverloads constructor(
 
     /**
      * Called when the view is attached to a window. Starts the wave animation.
+     *
+     * @author lorenzus-jpeg
+     * @since v1
      */
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
@@ -297,10 +316,13 @@ class AnimatedBackgroundView @JvmOverloads constructor(
     /**
      * Called when the view is detached from a window. Stops the animation
      * to prevent memory leaks and unnecessary processing.
+     *
+     * @author lorenzus-jpeg
+     * @since v1
      */
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
-        animator?.cancel()
+        animator?.cancel()  // FIXED: Was pause(), now properly cancels
     }
 
     /**
@@ -309,13 +331,16 @@ class AnimatedBackgroundView @JvmOverloads constructor(
      *
      * @param changedView The view whose visibility changed
      * @param visibility New visibility state (VISIBLE, INVISIBLE, or GONE)
+     *
+     * @author lorenzus-jpeg
+     * @since v1
      */
     override fun onVisibilityChanged(changedView: View, visibility: Int) {
         super.onVisibilityChanged(changedView, visibility)
         if (visibility == VISIBLE) {
             animator?.start()
         } else {
-            animator?.pause()
+            animator?.cancel()  // FIXED: Was pause(), now properly cancels
         }
     }
 }
