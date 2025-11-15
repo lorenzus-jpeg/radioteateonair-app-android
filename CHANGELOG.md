@@ -2,6 +2,13 @@
 
 Tutte le modifiche importanti a questo progetto saranno documentate in questo file.
 
+## [TOA-8] - 2025-11-15
+
+### Fixed
+- Il player tendeva a crashare dopo circa 15 minuti.
+
+---
+
 ## [TOA-7] - 2025-11-04
 
 ### Added
