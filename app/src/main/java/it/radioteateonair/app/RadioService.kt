@@ -254,8 +254,15 @@ class RadioService : Service() {
                         return@execute
                     }
 
+                    var connection: java.net.HttpURLConnection? = null
                     try {
-                        val response = URL(jsonUrl).readText(Charsets.UTF_8)
+                        val url = URL(jsonUrl)
+                        connection = url.openConnection() as java.net.HttpURLConnection
+                        connection.connectTimeout = 5000
+                        connection.readTimeout = 5000
+                        connection.requestMethod = "GET"
+
+                        val response = connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
                         val json = JSONObject(response)
                         val fullTitle = json
                             .getJSONObject("icestats")
@@ -279,8 +286,14 @@ class RadioService : Service() {
                     } catch (e: Exception) {
                         e.printStackTrace()
                     } finally {
+                        try {
+                            connection?.disconnect()
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+
                         if (!isServiceDestroyed && !executor.isShutdown) {
-                            handler.postDelayed(this, 2000)
+                            handler.postDelayed(this, 3000)
                         }
                     }
                 }
@@ -465,7 +478,7 @@ class RadioService : Service() {
     override fun onDestroy() {
         isServiceDestroyed = true
 
-        // Remove all pending callbacks
+        // Remove all pending callbacks FIRST - this prevents new tasks from being queued
         metadataUpdateRunnable?.let { handler.removeCallbacks(it) }
         handler.removeCallbacksAndMessages(null)
 
@@ -481,8 +494,12 @@ class RadioService : Service() {
             e.printStackTrace()
         }
 
+        // Shutdown executor and wait for pending tasks with timeout
         try {
             executor.shutdown()
+            if (!executor.awaitTermination(2, java.util.concurrent.TimeUnit.SECONDS)) {
+                executor.shutdownNow()
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }

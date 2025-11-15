@@ -60,6 +60,8 @@ class MainActivity : AppCompatActivity() {
     private var isFirstLoad = true
     private var lastClickTime = 0L
     private var isProcessingClick = false
+    private var isActivityDestroyed = false
+    private var metadataUpdateRunnable: Runnable? = null
 
     private val radioStateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -106,11 +108,8 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(this, RadioService::class.java).apply {
             action = RadioService.ACTION_PREFETCH
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(intent)
-        } else {
-            startService(intent)
-        }
+        // Use regular service for prefetch to avoid startForeground timeout
+        startService(intent)
     }
 
     private fun registerRadioStateReceiver() {
@@ -122,12 +121,20 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        isActivityDestroyed = true
+
+        // Remove all pending callbacks
+        metadataUpdateRunnable?.let { handler.removeCallbacks(it) }
+        handler.removeCallbacksAndMessages(null)
+
         LocalBroadcastManager.getInstance(this).unregisterReceiver(radioStateReceiver)
 
-        val intent = Intent(this, RadioService::class.java)
-        stopService(intent)
+        // Don't stop the service - let background music continue!
+        // val intent = Intent(this, RadioService::class.java)
+        // stopService(intent)
 
-        executor.shutdown()
+        // Don't shutdown executor - let background music continue
+        // executor.shutdown()
     }
 
     private fun initializeViews() {
@@ -425,11 +432,20 @@ class MainActivity : AppCompatActivity() {
     private fun startSongInfoUpdater() {
         val jsonUrl = "https://nr14.newradio.it:8663/status-json.xsl"
 
-        val updateTask = object : Runnable {
+        metadataUpdateRunnable = object : Runnable {
             override fun run() {
+                if (!isPlaying || isActivityDestroyed) return
+
                 executor.execute {
+                    var connection: java.net.HttpURLConnection? = null
                     try {
-                        val response = URL(jsonUrl).readText()
+                        val url = java.net.URL(jsonUrl)
+                        connection = url.openConnection() as java.net.HttpURLConnection
+                        connection.connectTimeout = 5000
+                        connection.readTimeout = 5000
+                        connection.requestMethod = "GET"
+
+                        val response = connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
                         val json = JSONObject(response)
                         val fullTitle = json
                             .getJSONObject("icestats")
@@ -441,25 +457,31 @@ class MainActivity : AppCompatActivity() {
                         val song = if (parts.size > 1) parts[1] else "In onda"
 
                         runOnUiThread {
-                            if (isPlaying) {
+                            if (isPlaying && !isActivityDestroyed) {
                                 songTitle.text = song
                                 artistName.text = artist
                                 adjustTextSizes()
+                                metadataUpdateRunnable?.let { handler.postDelayed(it, 5000) }
                             }
                         }
 
                     } catch (e: Exception) {
                         e.printStackTrace()
+                        if (isPlaying && !isActivityDestroyed) {
+                            metadataUpdateRunnable?.let { handler.postDelayed(it, 5000) }
+                        }
+                    } finally {
+                        try {
+                            connection?.disconnect()
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
                     }
-                }
-
-                if (isPlaying) {
-                    handler.postDelayed(this, 5000)
                 }
             }
         }
 
-        handler.post(updateTask)
+        metadataUpdateRunnable?.let { handler.post(it) }
     }
 
     private fun adjustTextSizes() {
