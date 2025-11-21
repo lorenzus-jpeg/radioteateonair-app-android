@@ -20,13 +20,6 @@ import java.net.URL
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 
-/**
- * Improved RadioService with:
- * - Audio stream prefetching for instant playback
- * - Debouncing to prevent race conditions
- * - Better state management
- * - UTF-8 encoding fix for accented characters in metadata
- */
 class RadioService : Service() {
 
     companion object {
@@ -38,7 +31,10 @@ class RadioService : Service() {
         private const val NOTIFICATION_ID = 1
         private const val CHANNEL_ID = "radio_channel"
         private const val STREAM_URL = "https://nr14.newradio.it:8663/radioteateonair"
-        private const val DEBOUNCE_DELAY_MS = 300L // Prevent rapid clicks
+        private const val DEBOUNCE_DELAY_MS = 300L
+        private const val KEEP_ALIVE_INTERVAL_MS = 20000L
+
+        var isServicePlaying = false
     }
 
     private var mediaPlayer: MediaPlayer? = null
@@ -46,6 +42,7 @@ class RadioService : Service() {
     private val executor = Executors.newSingleThreadExecutor()
     private val handler = Handler(Looper.getMainLooper())
     private var metadataUpdateRunnable: Runnable? = null
+    private var keepAliveRunnable: Runnable? = null
 
     private var currentArtist = "Radio Teate OnAir"
     private var currentTitle = "In ascolto..."
@@ -54,44 +51,32 @@ class RadioService : Service() {
     private val isPreparing = AtomicBoolean(false)
     private val isPrepared = AtomicBoolean(false)
 
-    // Debouncing
     private var lastActionTime = 0L
     private val actionLock = Any()
 
     override fun onCreate() {
         super.onCreate()
         setupNotificationManager()
-        // Prefetch audio immediately when service is created
         prefetchAudioStream()
     }
 
-    /**
-     * Fixes UTF-8 encoding issues where accented characters are garbled.
-     * This reverses the mojibake effect caused by UTF-8 being misinterpreted as Latin-1.
-     */
     private fun fixUtf8Encoding(garbledText: String): String {
         return try {
-            // Try to reverse the common UTF-8 → Latin-1 encoding error
             garbledText.toByteArray(Charsets.ISO_8859_1).toString(Charsets.UTF_8)
         } catch (e: Exception) {
-            // If conversion fails, return original text
             garbledText
         }
     }
 
-    /**
-     * Prefetches the audio stream so it's ready for instant playback
-     */
     private fun prefetchAudioStream() {
         if (isPreparing.get() || isPrepared.get()) {
-            return // Already preparing or prepared
+            return
         }
 
         isPreparing.set(true)
 
         executor.execute {
             try {
-                // Release old player if exists
                 mediaPlayer?.let {
                     try {
                         it.stop()
@@ -102,7 +87,6 @@ class RadioService : Service() {
                     }
                 }
 
-                // Create and prepare new player
                 mediaPlayer = MediaPlayer().apply {
                     setAudioAttributes(
                         AudioAttributes.Builder()
@@ -114,31 +98,27 @@ class RadioService : Service() {
                     setOnPreparedListener {
                         isPreparing.set(false)
                         isPrepared.set(true)
-                        // Don't start playing automatically - just ready to play
                     }
 
                     setOnErrorListener { mp, what, extra ->
                         isPreparing.set(false)
                         isPrepared.set(false)
-                        // Retry prefetch after error
                         handler.postDelayed({ prefetchAudioStream() }, 2000)
                         true
                     }
 
                     setOnCompletionListener {
-                        // If stream completes (shouldn't happen for radio), reprepare
                         isPrepared.set(false)
                         prefetchAudioStream()
                     }
 
                     try {
                         setDataSource(STREAM_URL)
-                        prepareAsync() // Prepare in background
+                        prepareAsync()
                     } catch (e: Exception) {
                         e.printStackTrace()
                         isPreparing.set(false)
                         isPrepared.set(false)
-                        // Retry after error
                         handler.postDelayed({ prefetchAudioStream() }, 2000)
                     }
                 }
@@ -148,6 +128,44 @@ class RadioService : Service() {
                 isPrepared.set(false)
             }
         }
+    }
+
+    private fun startKeepAliveMonitor() {
+        if (keepAliveRunnable != null) {
+            return
+        }
+
+        keepAliveRunnable = object : Runnable {
+            override fun run() {
+                try {
+                    mediaPlayer?.let { player ->
+                        if (isPlaying && player.isPlaying) {
+                            player.duration
+                            player.currentPosition
+                            player.audioSessionId
+                        }
+                    }
+
+                    if (isPlaying && !isServiceDestroyed) {
+                        handler.postDelayed(this, KEEP_ALIVE_INTERVAL_MS)
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    if (isPlaying && !isServiceDestroyed) {
+                        handler.postDelayed(this, KEEP_ALIVE_INTERVAL_MS)
+                    }
+                }
+            }
+        }
+
+        handler.post(keepAliveRunnable!!)
+    }
+
+    private fun stopKeepAliveMonitor() {
+        keepAliveRunnable?.let {
+            handler.removeCallbacks(it)
+        }
+        keepAliveRunnable = null
     }
 
     private fun startServiceProperly() {
@@ -222,9 +240,6 @@ class RadioService : Service() {
                 .setShowActionsInCompactView(0)
                 .setMediaSession(null)
             )
-            .setOngoing(isPlaying)
-            .setAutoCancel(false)
-            .setColor(0xFF008000.toInt())
             .build()
 
         return notification
@@ -235,65 +250,59 @@ class RadioService : Service() {
             this.action = action
         }
         return PendingIntent.getService(
-            this, 0, intent,
+            this, action.hashCode(), intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
     }
 
     private fun startMetadataUpdater() {
-        val jsonUrl = "https://nr14.newradio.it:8663/status-json.xsl"
+        if (metadataUpdateRunnable != null) {
+            return
+        }
 
         metadataUpdateRunnable = object : Runnable {
             override fun run() {
-                if (isServiceDestroyed || executor.isShutdown) {
-                    return
-                }
-
-                executor.execute {
-                    if (isServiceDestroyed || executor.isShutdown) {
-                        return@execute
-                    }
-
-                    var connection: java.net.HttpURLConnection? = null
-                    try {
-                        val url = URL(jsonUrl)
-                        connection = url.openConnection() as java.net.HttpURLConnection
-                        connection.connectTimeout = 5000
-                        connection.readTimeout = 5000
-                        connection.requestMethod = "GET"
-
-                        val response = connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
-                        val json = JSONObject(response)
-                        val fullTitle = json
-                            .getJSONObject("icestats")
-                            .getJSONObject("source")
-                            .getString("yp_currently_playing")
-
-                        // Fix UTF-8 encoding issues with accents and special characters
-                        val fixedTitle = fixUtf8Encoding(fullTitle)
-
-                        val parts = fixedTitle.split(" - ", limit = 2)
-                        val artist = parts.getOrNull(0)?.trim() ?: ""
-                        val song = parts.getOrNull(1)?.trim() ?: "In caricamento..."
-
-                        handler.post {
-                            if (!isServiceDestroyed && (currentArtist != artist || currentTitle != song)) {
-                                currentArtist = artist
-                                currentTitle = song
-                                updateNotification()
-                            }
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    } finally {
+                if (!isServiceDestroyed && isPlaying) {
+                    executor.execute {
+                        var connection: java.net.HttpURLConnection? = null
                         try {
-                            connection?.disconnect()
+                            connection = URL("https://radioteateonair.it:8663/status-json.xsl")
+                                .openConnection() as java.net.HttpURLConnection
+                            connection.connectTimeout = 5000
+                            connection.readTimeout = 5000
+
+                            val response = connection.inputStream.bufferedReader().use { it.readText() }
+                            val json = JSONObject(response)
+
+                            val fullTitle = json
+                                .getJSONObject("icestats")
+                                .getJSONObject("source")
+                                .getString("yp_currently_playing")
+
+                            val parts = fullTitle.split(" - ", limit = 2)
+                            val artist = if (parts.isNotEmpty()) parts[0] else "Teate On Air"
+                            val song = if (parts.size > 1) parts[1] else "In onda"
+
+                            handler.post {
+                                if (isPlaying && !isServiceDestroyed) {
+                                    currentTitle = song
+                                    currentArtist = artist
+                                    updateNotification()
+                                    metadataUpdateRunnable?.let { handler.postDelayed(it, 5000) }
+                                }
+                            }
+
                         } catch (e: Exception) {
                             e.printStackTrace()
-                        }
-
-                        if (!isServiceDestroyed && !executor.isShutdown) {
-                            handler.postDelayed(this, 3000)
+                            if (isPlaying && !isServiceDestroyed) {
+                                metadataUpdateRunnable?.let { handler.postDelayed(it, 5000) }
+                            }
+                        } finally {
+                            try {
+                                connection?.disconnect()
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
                         }
                     }
                 }
@@ -316,11 +325,9 @@ class RadioService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (isServiceDestroyed) return START_NOT_STICKY
 
-        // Debounce rapid actions (except PREFETCH)
         if (intent?.action != ACTION_PREFETCH) {
             val currentTime = System.currentTimeMillis()
             if (currentTime - lastActionTime < DEBOUNCE_DELAY_MS) {
-                // Too soon, ignore this action
                 return START_STICKY
             }
             lastActionTime = currentTime
@@ -328,11 +335,9 @@ class RadioService : Service() {
 
         when (intent?.action) {
             ACTION_PREFETCH -> {
-                // Just prefetch, don't start foreground service or show notification
                 prefetchAudioStream()
             }
             ACTION_PLAY -> {
-                // Start foreground service before playing
                 startServiceProperly()
                 playStream()
             }
@@ -348,7 +353,6 @@ class RadioService : Service() {
                 closeNotificationAndService()
             }
             else -> {
-                // If service is started without action, just prefetch
                 prefetchAudioStream()
             }
         }
@@ -359,14 +363,12 @@ class RadioService : Service() {
     private fun playStream() {
         synchronized(actionLock) {
             if (isPlaying) {
-                return // Already playing
+                return
             }
 
             val player = mediaPlayer
             if (player == null) {
-                // No player, create and prepare
                 prefetchAudioStream()
-                // Will need to wait for prepare to complete
                 handler.postDelayed({ playStream() }, 500)
                 return
             }
@@ -374,12 +376,13 @@ class RadioService : Service() {
             try {
                 when {
                     isPrepared.get() -> {
-                        // Stream is ready, play immediately
                         if (!player.isPlaying) {
                             player.start()
                             isPlaying = true
+                            isServicePlaying = true
 
-                            // Send broadcast
+                            startKeepAliveMonitor()
+
                             val broadcastIntent = Intent(MainActivity.ACTION_AUDIO_STARTED)
                             LocalBroadcastManager.getInstance(this).sendBroadcast(broadcastIntent)
 
@@ -388,11 +391,9 @@ class RadioService : Service() {
                         Unit
                     }
                     isPreparing.get() -> {
-                        // Still preparing, wait and retry
                         handler.postDelayed({ playStream() }, 200)
                     }
                     else -> {
-                        // Not prepared, start prefetch
                         prefetchAudioStream()
                         handler.postDelayed({ playStream() }, 500)
                     }
@@ -401,7 +402,6 @@ class RadioService : Service() {
                 e.printStackTrace()
                 isPlaying = false
                 isPrepared.set(false)
-                // Try to recover
                 prefetchAudioStream()
             }
         }
@@ -410,23 +410,24 @@ class RadioService : Service() {
     private fun stopStreamButKeepNotification() {
         synchronized(actionLock) {
             if (!isPlaying) {
-                return // Already stopped
+                return
             }
 
             isPlaying = false
+            isServicePlaying = false
+
+            stopKeepAliveMonitor()
 
             try {
                 mediaPlayer?.let { player ->
                     if (player.isPlaying) {
                         player.pause()
-                        // Keep stream prepared for quick restart
                     }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
 
-            // Send broadcast
             val broadcastIntent = Intent(MainActivity.ACTION_AUDIO_STOPPED)
             LocalBroadcastManager.getInstance(this).sendBroadcast(broadcastIntent)
 
@@ -437,11 +438,12 @@ class RadioService : Service() {
     private fun closeNotificationAndService() {
         synchronized(actionLock) {
             isPlaying = false
+            isServicePlaying = false
             isPrepared.set(false)
             isPreparing.set(false)
 
-            // Stop metadata updates
             metadataUpdateRunnable?.let { handler.removeCallbacks(it) }
+            stopKeepAliveMonitor()
 
             try {
                 mediaPlayer?.let {
@@ -456,11 +458,9 @@ class RadioService : Service() {
                 e.printStackTrace()
             }
 
-            // Send broadcast
             val broadcastIntent = Intent(MainActivity.ACTION_AUDIO_STOPPED)
             LocalBroadcastManager.getInstance(this).sendBroadcast(broadcastIntent)
 
-            // Stop the service completely
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     stopForeground(STOP_FOREGROUND_REMOVE)
@@ -478,8 +478,8 @@ class RadioService : Service() {
     override fun onDestroy() {
         isServiceDestroyed = true
 
-        // Remove all pending callbacks FIRST - this prevents new tasks from being queued
         metadataUpdateRunnable?.let { handler.removeCallbacks(it) }
+        stopKeepAliveMonitor()
         handler.removeCallbacksAndMessages(null)
 
         try {
@@ -494,7 +494,6 @@ class RadioService : Service() {
             e.printStackTrace()
         }
 
-        // Shutdown executor and wait for pending tasks with timeout
         try {
             executor.shutdown()
             if (!executor.awaitTermination(2, java.util.concurrent.TimeUnit.SECONDS)) {

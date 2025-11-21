@@ -103,6 +103,24 @@
             android:src="@drawable/ic_whoweare"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toEndOf="@id/box2"
+            app:layout_constraintEnd_toStartOf="@id/box4"
+            app:layout_constraintHorizontal_chainStyle="spread" />
+
+        <!-- Box 4: My Options/Le Mie Opzioni -->
+        <ImageView
+            android:id="@+id/box4"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_margin="8dp"
+            android:background="@android:color/transparent"
+            android:clickable="true"
+            android:contentDescription="My Options"
+            android:focusable="true"
+            android:padding="10dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_settings"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toEndOf="@id/box3"
             app:layout_constraintEnd_toEndOf="parent" />
 
         <!-- Label 1: Schedule text -->
@@ -151,6 +169,22 @@
             app:layout_constraintTop_toBottomOf="@id/box3"
             app:layout_constraintStart_toStartOf="@id/box3"
             app:layout_constraintEnd_toEndOf="@id/box3"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <!-- Label 4: My Options text -->
+        <TextView
+            android:id="@+id/text4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Opzioni"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            android:textAllCaps="true"
+            android:gravity="center"
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toBottomOf="@id/box4"
+            app:layout_constraintStart_toStartOf="@id/box4"
+            app:layout_constraintEnd_toEndOf="@id/box4"
             app:layout_constraintBottom_toBottomOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

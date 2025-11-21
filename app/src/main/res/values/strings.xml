@@ -27,6 +27,44 @@
     <string name="schedule_desc">Visualizza il palinsesto della radio</string>
     <string name="programs_desc">Scopri i programmi della radio</string>
     <string name="about_us_desc">Informazioni su Radio Teate OnAir</string>
+    <string name="my_options_desc">Configura le tue preferenze</string>
+
+    <!-- Modal Titles -->
+    <string name="palinsesto_oggi">Palinsesto Oggi</string>
+    <string name="programmi_title">Programmi</string>
+    <string name="chi_siamo_title">Chi Siamo</string>
+    <string name="le_mie_opzioni">Le Mie Opzioni</string>
+    <string name="opzioni">OPZIONI</string>
+
+    <!-- MyOptions - Wave Shape Settings -->
+    <string name="wave_shape_title">Sfondo</string>
+    <string name="wave_smooth">Onde</string>
+    <string name="wave_flat">Linee</string>
+    <string name="wave_triangle">Punte</string>
+    <string name="wave_description">Scegli l\'animazione di sfondo</string>
+
+    <!-- Loading and Status Messages -->
+    <string name="loading">Caricamento...</string>
+    <string name="error">Errore</string>
+    <string name="error_connection">Impossibile caricare il contenuto</string>
+    <string name="error_schedule">Impossibile caricare il palinsesto</string>
+    <string name="error_programs">Impossibile caricare i programmi</string>
+    <string name="retry">Riprova</string>
+    <string name="no_schedule">E\' tutto per oggi</string>
+    <string name="no_schedule_text">Torna domani per il nuovo palinsesto</string>
+    <string name="no_programs">Nessun programma trovato</string>
+    <string name="check_connection">Controlla la connessione internet e riprova.</string>
+
+    <!-- Social Media URLs -->
+    <string name="url_facebook">https://www.facebook.com/radioteateonair</string>
+    <string name="url_instagram">https://www.instagram.com/radio_teateonair</string>
+    <string name="url_tiktok">https://www.tiktok.com/@radioteateonair</string>
+    <string name="url_youtube">https://www.youtube.com/@radioteateonair4409</string>
+    <string name="url_spotify">https://open.spotify.com/user/bdubob5m8sthl8504ab0xx88y</string>
+
+    <!-- Schedule and Programs URLs -->
+    <string name="url_schedule">https://radioteateonair.it/palinsesto</string>
+    <string name="url_programs">https://www.radioteateonair.it/programmi/</string>
 
     <!-- Chi Siamo Modal Content -->
     <string name="about_us_content">
