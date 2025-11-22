@@ -32,11 +32,20 @@ import androidx.core.view.updateLayoutParams
 import androidx.core.view.WindowCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import org.json.JSONObject
-import java.net.URL
 import java.util.concurrent.Executors
 import android.graphics.Color
 import android.widget.TextView
 
+/**
+ * Main Activity - Radio Teate OnAir Application
+ *
+ * Handles the main UI, radio playback control, and navigation between modals.
+ * Features include play/stop control, real-time song metadata display, and
+ * configurable background wave animations with multiple shape modes.
+ *
+ * @author lorenzus-jpeg
+ * @since v11
+ */
 class MainActivity : AppCompatActivity() {
 
     companion object {
@@ -63,6 +72,13 @@ class MainActivity : AppCompatActivity() {
     private var isActivityDestroyed = false
     private var metadataUpdateRunnable: Runnable? = null
 
+    /**
+     * BroadcastReceiver for radio service state changes.
+     * Listens for audio start/stop events and updates UI accordingly.
+     *
+     * @author lorenzus-jpeg
+     * @since v11
+     */
     private val radioStateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
@@ -87,6 +103,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Activity creation lifecycle method.
+     * Initializes all UI components, system settings, permissions, and event listeners.
+     * Restores user preferences including saved wave shape mode.
+     *
+     * @param savedInstanceState Previously saved activity state bundle
+     *
+     * @author lorenzus-jpeg
+     * @since v11
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -99,11 +125,30 @@ class MainActivity : AppCompatActivity() {
 
         handler = Handler(Looper.getMainLooper())
 
+        // Initialize wave mode from saved settings
+        val backgroundView = findViewById<AnimatedBackgroundView>(R.id.backgroundGradient)
+        val savedWaveShape = MyOptions(this).getWaveShape()
+        backgroundView.setWaveMode(savedWaveShape)
+
         CacheManager.prefetchAll()
 
         prefetchAudioStream()
+
+        // Check if RadioService is already playing (e.g., after backgrounding)
+        if (RadioService.isServicePlaying) {
+            isPlaying = true
+            animateToPlayingState()
+            startSongInfoUpdater()
+        }
     }
 
+    /**
+     * Prefetches the audio stream to improve play performance.
+     * Sends an intent to RadioService to start background stream buffering.
+     *
+     * @author lorenzus-jpeg
+     * @since v11
+     */
     private fun prefetchAudioStream() {
         val intent = Intent(this, RadioService::class.java).apply {
             action = RadioService.ACTION_PREFETCH
@@ -112,6 +157,12 @@ class MainActivity : AppCompatActivity() {
         startService(intent)
     }
 
+    /**
+     * Registers the radio state BroadcastReceiver to listen for audio events.
+     *
+     * @author lorenzus-jpeg
+     * @since v11
+     */
     private fun registerRadioStateReceiver() {
         val filter = IntentFilter()
         filter.addAction(ACTION_AUDIO_STOPPED)
@@ -119,6 +170,14 @@ class MainActivity : AppCompatActivity() {
         LocalBroadcastManager.getInstance(this).registerReceiver(radioStateReceiver, filter)
     }
 
+    /**
+     * Activity destruction lifecycle method.
+     * Cleans up resources and unregisters receivers to prevent memory leaks.
+     * Does not stop the RadioService to allow background playback to continue.
+     *
+     * @author lorenzus-jpeg
+     * @since v11
+     */
     override fun onDestroy() {
         super.onDestroy()
         isActivityDestroyed = true
@@ -137,6 +196,13 @@ class MainActivity : AppCompatActivity() {
         // executor.shutdown()
     }
 
+    /**
+     * Initializes all view references from the layout.
+     * Sets up layout listeners for responsive text sizing.
+     *
+     * @author lorenzus-jpeg
+     * @since v11
+     */
     private fun initializeViews() {
         startButton = findViewById(R.id.startButton)
         playButton = findViewById(R.id.playButton)
@@ -153,6 +219,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Sets up system UI elements including window insets and fullscreen behavior.
+     * Handles edge-to-edge display and system bar positioning.
+     *
+     * @author lorenzus-jpeg
+     * @since v11
+     */
     private fun setupSystemUI() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
@@ -179,6 +252,35 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Requests notification display permission from the user (Android 13+).
+     *
+     * @author lorenzus-jpeg
+     * @since v11
+     */
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    android.Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                    NOTIFICATION_PERMISSION_REQUEST_CODE
+                )
+            }
+        }
+    }
+
+    /**
+     * Sets up click listeners for all UI buttons and navigation elements.
+     * Configures player controls, modal triggers, and social media links.
+     *
+     * @author lorenzus-jpeg
+     * @since v11
+     */
     private fun setupClickListeners() {
         startButton.setOnClickListener {
             handlePlayerClick()
@@ -189,7 +291,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<View>(R.id.box1).setOnClickListener {
-            showImprovedPalinsestoModal("https://radioteateonair.it/palinsesto")
+            showImprovedPalinsestoModal(getString(R.string.url_schedule))
         }
 
         findViewById<View>(R.id.box2).setOnClickListener {
@@ -200,33 +302,44 @@ class MainActivity : AppCompatActivity() {
             showAboutUsModal()
         }
 
+        findViewById<View>(R.id.box4).setOnClickListener {
+            showMyOptionsModal()
+        }
+
         findViewById<View>(R.id.socialFacebook).setOnClickListener {
-            val url = "https://www.facebook.com/radioteateonair"
+            val url = getString(R.string.url_facebook)
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
         }
 
         findViewById<View>(R.id.socialInstagram).setOnClickListener {
-            val url = "https://www.instagram.com/radio_teateonair"
+            val url = getString(R.string.url_instagram)
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
         }
 
         findViewById<View>(R.id.socialTikTok).setOnClickListener {
-            val url = "https://www.tiktok.com/@radioteateonair"
+            val url = getString(R.string.url_tiktok)
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
         }
 
         findViewById<View>(R.id.socialYouTube).setOnClickListener {
-            val url = "https://www.youtube.com/@radioteateonair4409"
+            val url = getString(R.string.url_youtube)
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
         }
 
         findViewById<View>(R.id.socialSpotify).setOnClickListener {
-            val url = "https://open.spotify.com/user/bdubob5m8sthl8504ab0xx88y"
+            val url = getString(R.string.url_spotify)
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
         }
 
     }
 
+    /**
+     * Handles radio player button clicks with debounce protection.
+     * Toggles between play and stop states with click debouncing to prevent rapid clicks.
+     *
+     * @author lorenzus-jpeg
+     * @since v11
+     */
     private fun handlePlayerClick() {
         val currentTime = System.currentTimeMillis()
 
@@ -282,18 +395,6 @@ class MainActivity : AppCompatActivity() {
         handler.postDelayed({
             isProcessingClick = false
         }, 300)
-    }
-
-    private fun requestNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (!hasNotificationPermission()) {
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
-                    NOTIFICATION_PERMISSION_REQUEST_CODE
-                )
-            }
-        }
     }
 
     private fun hasNotificationPermission(): Boolean {
@@ -450,7 +551,7 @@ class MainActivity : AppCompatActivity() {
                         val fullTitle = json
                             .getJSONObject("icestats")
                             .getJSONObject("source")
-                            .getString("yp_currently_playing")
+                            .getString("title") //yp_currently_playing
 
                         val parts = fullTitle.split(" - ", limit = 2)
                         val artist = if (parts.isNotEmpty()) parts[0] else "Teate On Air"
@@ -484,6 +585,13 @@ class MainActivity : AppCompatActivity() {
         metadataUpdateRunnable?.let { handler.post(it) }
     }
 
+    /**
+     * Adjusts text sizes for song title and artist name based on available space.
+     * Dynamically reduces font size if text exceeds maximum width.
+     *
+     * @author lorenzus-jpeg
+     * @since v11
+     */
     private fun adjustTextSizes() {
         if (bottomBar.width <= 0) return
 
@@ -516,18 +624,70 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Displays the schedule/palinsesto modal.
+     *
+     * @param url The URL to load for the schedule
+     *
+     * @author lorenzus-jpeg
+     * @since v11
+     */
     private fun showImprovedPalinsestoModal(url: String) {
         ScheduleModal(this).show(url)
     }
 
+    /**
+     * Displays the programs/programmi modal.
+     *
+     * @author lorenzus-jpeg
+     * @since v11
+     */
     private fun showProgramsModal() {
         ProgramsModal(this).show()
     }
 
+    /**
+     * Displays the about us/chi siamo modal.
+     *
+     * @author lorenzus-jpeg
+     * @since v11
+     */
     private fun showAboutUsModal() {
         WhoWeAre(this).show()
     }
 
+    /**
+     * Displays the my options/le mie opzioni modal.
+     *
+     * @author lorenzus-jpeg
+     * @since v11
+     */
+    private fun showMyOptionsModal() {
+        MyOptions(this).show()
+    }
+
+    /**
+     * Updates the wave shape mode of the animated background.
+     * Called from MyOptions modal when user changes the wave shape preference.
+     *
+     * @param shape Wave shape mode: "wave", "flat", or "triangle"
+     *
+     * @author lorenzus-jpeg
+     * @since v11
+     */
+    fun updateWaveShape(shape: String) {
+        findViewById<AnimatedBackgroundView>(R.id.backgroundGradient).setWaveMode(shape)
+    }
+
+    /**
+     * Creates a ripple effect drawable for button interactions.
+     * Uses Material Design ripple effect (API 21+) or fallback for older versions.
+     *
+     * @return A Drawable with ripple effect
+     *
+     * @author lorenzus-jpeg
+     * @since v11
+     */
     private fun createRippleDrawable(): Drawable {
         val rippleColor = Color.parseColor("#33000000")
         val content = GradientDrawable().apply {

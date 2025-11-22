@@ -2,6 +2,13 @@
 
 Tutte le modifiche importanti a questo progetto saranno documentate in questo file.
 
+## [TOA-9] - 2025-11-21
+
+### Added
+- Supporto per menu "opzioni".
+
+---
+
 ## [TOA-8] - 2025-11-15
 
 ### Fixed
