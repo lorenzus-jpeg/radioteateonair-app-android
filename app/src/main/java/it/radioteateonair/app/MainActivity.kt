@@ -552,7 +552,7 @@ class MainActivity : AppCompatActivity() {
                         val fullTitle = json
                             .getJSONObject("icestats")
                             .getJSONObject("source")
-                            .getString("yp_currently_playing")
+                            .getString("title") //yp_currently_playing
 
                         val parts = fullTitle.split(" - ", limit = 2)
                         val artist = if (parts.isNotEmpty()) parts[0] else "Teate On Air"
