@@ -32,7 +32,6 @@ import androidx.core.view.updateLayoutParams
 import androidx.core.view.WindowCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import org.json.JSONObject
-import java.net.URL
 import java.util.concurrent.Executors
 import android.graphics.Color
 import android.widget.TextView

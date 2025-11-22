@@ -8,7 +8,6 @@ import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.view.Gravity
-import android.view.View
 import android.view.Window
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -114,7 +113,6 @@ class MyOptions(private val context: Context) {
             text = context.getString(R.string.wave_smooth)
             textSize = 14f
             setTextColor(Color.parseColor("#333333"))
-            isChecked = (currentWaveShape == WAVE_SHAPE_WAVE)
             layoutParams = RadioGroup.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -129,7 +127,6 @@ class MyOptions(private val context: Context) {
             text = context.getString(R.string.wave_flat)
             textSize = 14f
             setTextColor(Color.parseColor("#333333"))
-            isChecked = (currentWaveShape == WAVE_SHAPE_FLAT)
             layoutParams = RadioGroup.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -144,7 +141,6 @@ class MyOptions(private val context: Context) {
             text = context.getString(R.string.wave_triangle)
             textSize = 14f
             setTextColor(Color.parseColor("#333333"))
-            isChecked = (currentWaveShape == WAVE_SHAPE_TRIANGLE)
             layoutParams = RadioGroup.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -155,6 +151,13 @@ class MyOptions(private val context: Context) {
         radioGroup.addView(waveRadio)
         radioGroup.addView(flatRadio)
         radioGroup.addView(triangleRadio)
+
+        // Set the correct selection using RadioGroup.check()
+        when (currentWaveShape) {
+            WAVE_SHAPE_WAVE -> radioGroup.check(waveRadio.id)
+            WAVE_SHAPE_FLAT -> radioGroup.check(flatRadio.id)
+            WAVE_SHAPE_TRIANGLE -> radioGroup.check(triangleRadio.id)
+        }
 
         radioGroup.setOnCheckedChangeListener { _, checkedId ->
             val newShape = when (checkedId) {
