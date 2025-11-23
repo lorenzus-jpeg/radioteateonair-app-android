@@ -188,12 +188,6 @@ class MainActivity : AppCompatActivity() {
 
         LocalBroadcastManager.getInstance(this).unregisterReceiver(radioStateReceiver)
 
-        // Don't stop the service - let background music continue!
-        // val intent = Intent(this, RadioService::class.java)
-        // stopService(intent)
-
-        // Don't shutdown executor - let background music continue
-        // executor.shutdown()
     }
 
     /**

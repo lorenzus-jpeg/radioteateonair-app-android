@@ -14,10 +14,6 @@ object CacheManager {
         prefetchPrograms()
     }
 
-    /**
-     * FIXED: Properly closes URLConnection and BufferedReader
-     * Also specifies UTF-8 encoding explicitly
-     */
     private fun prefetchSchedule() {
         executor.execute {
             var connection: HttpURLConnection? = null
