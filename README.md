@@ -57,6 +57,7 @@ Per clonare, configurare e avviare l'applicazione in locale, segui questi passag
 ## 4. Tecnologie Utilizzate
 
 AndroidX Libraries:
+
 - androidx.appcompat:appcompat
 - androidx.core:core-ktx
 - androidx.constraintlayout:constraintlayout
@@ -64,9 +65,11 @@ AndroidX Libraries:
 - androidx.localbroadcastmanager:localbroadcastmanager
 
 Third-Party:
+
 - org.jsoup:jsoup
 
 Android Framework:
+
 - android.animation.ValueAnimator
 - android.media.MediaPlayer
 - android.media.AudioAttributes
@@ -99,11 +102,13 @@ Android Framework:
 - java.util.concurrent.Executors
 
 OS REQUIREMENTS:
+
 - Minimum: Android 5.0 (API 21)
 - Target: Android 13 (API 33+)
 - Permissions: INTERNET, FOREGROUND_SERVICE, POST_NOTIFICATIONS
 
 IDE REQUIREMENTS:
+
 - Android Studio Arctic Fox 2020.3.1+ (minimum)
 - Android Studio Hedgehog 2023.1.1+ (recommended)
 - Gradle
@@ -116,8 +121,7 @@ IDE REQUIREMENTS:
 - MVC/MVP Pattern
 - MainActivity (UI Controller)
 - RadioService (Foreground Service)
-- AnimatedBackgroundView (Custom View - 10 waves)
-- PlayerAnimatedBackgroundView (Custom View - 6 waves)
+- AnimatedBackgroundView (Custom View - 10 shapes)
 
 ---
 
