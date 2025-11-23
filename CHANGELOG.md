@@ -2,6 +2,27 @@
 
 Tutte le modifiche importanti a questo progetto saranno documentate in questo file.
 
+## [TOA-11] - 2025-11-23
+
+### Added
+- Fix per selezione del menu opzioni che mostrava due selezioni contemporaneamente.
+
+---
+
+## [TOA-10] - 2025-11-22
+
+### Added
+- Fix per player radio che si interrompe durante l'ascolto dopo circa 10 minuti.
+
+---
+
+## [TOA-9] - 2025-11-21
+
+### Added
+- Supporto per menu "opzioni".
+
+---
+
 ## [TOA-8] - 2025-11-15
 
 ### Fixed
