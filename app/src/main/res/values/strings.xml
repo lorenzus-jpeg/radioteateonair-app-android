@@ -42,6 +42,7 @@
     <string name="wave_flat">Linee</string>
     <string name="wave_triangle">Punte</string>
     <string name="wave_description">Scegli l\'animazione di sfondo</string>
+    <string name="wave_bouncing">Traccia</string>
 
     <!-- Loading and Status Messages -->
     <string name="loading">Caricamento...</string>

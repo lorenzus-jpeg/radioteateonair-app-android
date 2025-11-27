@@ -2,6 +2,16 @@
 
 Tutte le modifiche importanti a questo progetto saranno documentate in questo file.
 
+## [TOA-12] - 2025-11-27
+
+### Added
+- Opzione "Traccia" per lo sfondo.
+
+### Fixed
+- Rimozione del box notifica manuale.
+
+---
+
 ## [TOA-11] - 2025-11-23
 
 ### Added

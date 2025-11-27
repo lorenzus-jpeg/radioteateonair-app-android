@@ -24,6 +24,7 @@ class MyOptions(private val context: Context) {
         const val WAVE_SHAPE_WAVE = "wave"
         const val WAVE_SHAPE_FLAT = "flat"
         const val WAVE_SHAPE_TRIANGLE = "triangle"
+        const val WAVE_SHAPE_BOUNCING = "bouncing"
     }
 
     private val sharedPreferences: SharedPreferences =
@@ -79,7 +80,6 @@ class MyOptions(private val context: Context) {
             setPadding(32, 32, 32, 32)
         }
 
-        // Wave Shape Section
         val waveShapeTitle = TextView(context).apply {
             text = context.getString(R.string.wave_shape_title)
             textSize = 16f
@@ -94,10 +94,8 @@ class MyOptions(private val context: Context) {
         }
         contentLayout.addView(waveShapeTitle)
 
-        // Get current selection
         val currentWaveShape = getWaveShape()
 
-        // Radio Group for wave shape
         val radioGroup = RadioGroup(context).apply {
             orientation = RadioGroup.VERTICAL
             layoutParams = LinearLayout.LayoutParams(
@@ -108,7 +106,6 @@ class MyOptions(private val context: Context) {
             }
         }
 
-        // Wave option
         val waveRadio = RadioButton(context).apply {
             text = context.getString(R.string.wave_smooth)
             textSize = 14f
@@ -122,7 +119,6 @@ class MyOptions(private val context: Context) {
             buttonTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#00FF88"))
         }
 
-        // Flat option
         val flatRadio = RadioButton(context).apply {
             text = context.getString(R.string.wave_flat)
             textSize = 14f
@@ -136,9 +132,21 @@ class MyOptions(private val context: Context) {
             buttonTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#00FF88"))
         }
 
-        // Triangle option
         val triangleRadio = RadioButton(context).apply {
             text = context.getString(R.string.wave_triangle)
+            textSize = 14f
+            setTextColor(Color.parseColor("#333333"))
+            layoutParams = RadioGroup.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = 12
+            }
+            buttonTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#00FF88"))
+        }
+
+        val bouncingRadio = RadioButton(context).apply {
+            text = context.getString(R.string.wave_bouncing)
             textSize = 14f
             setTextColor(Color.parseColor("#333333"))
             layoutParams = RadioGroup.LayoutParams(
@@ -151,12 +159,13 @@ class MyOptions(private val context: Context) {
         radioGroup.addView(waveRadio)
         radioGroup.addView(flatRadio)
         radioGroup.addView(triangleRadio)
+        radioGroup.addView(bouncingRadio)
 
-        // Set the correct selection using RadioGroup.check()
         when (currentWaveShape) {
             WAVE_SHAPE_WAVE -> radioGroup.check(waveRadio.id)
             WAVE_SHAPE_FLAT -> radioGroup.check(flatRadio.id)
             WAVE_SHAPE_TRIANGLE -> radioGroup.check(triangleRadio.id)
+            WAVE_SHAPE_BOUNCING -> radioGroup.check(bouncingRadio.id)
         }
 
         radioGroup.setOnCheckedChangeListener { _, checkedId ->
@@ -164,11 +173,11 @@ class MyOptions(private val context: Context) {
                 waveRadio.id -> WAVE_SHAPE_WAVE
                 flatRadio.id -> WAVE_SHAPE_FLAT
                 triangleRadio.id -> WAVE_SHAPE_TRIANGLE
+                bouncingRadio.id -> WAVE_SHAPE_BOUNCING
                 else -> WAVE_SHAPE_WAVE
             }
             saveWaveShape(newShape)
 
-            // Notify MainActivity to update
             if (context is MainActivity) {
                 context.updateWaveShape(newShape)
             }
@@ -176,7 +185,6 @@ class MyOptions(private val context: Context) {
 
         contentLayout.addView(radioGroup)
 
-        // Description
         val description = TextView(context).apply {
             text = context.getString(R.string.wave_description)
             textSize = 13f

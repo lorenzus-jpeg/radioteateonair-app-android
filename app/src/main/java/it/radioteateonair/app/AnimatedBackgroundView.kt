@@ -8,13 +8,6 @@ import android.view.View
 import android.view.animation.LinearInterpolator
 import kotlin.math.*
 
-/**
- * Animated background view that displays multiple layered wave animations.
- * Supports three wave modes: smooth waves, flat steps, and triangular waves.
- *
- * @author lorenzus-jpeg
- * @since v11
- */
 class AnimatedBackgroundView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -25,18 +18,23 @@ class AnimatedBackgroundView @JvmOverloads constructor(
     private var waveMode = "wave"
     private val waveOffsets = FloatArray(10)
 
+    // Bouncing trail animation properties
+    private data class BouncingDot(
+        var x: Float = 0f,
+        var y: Float = 0f,
+        var velocityX: Float = 0f,
+        var velocityY: Float = 0f,
+        val trailPoints: MutableList<Pair<Float, Float>> = mutableListOf(),
+        val trailTimestamps: MutableList<Long> = mutableListOf(),
+        val color: Int = 0
+    )
+
+    private val bouncingDots = mutableListOf<BouncingDot>()
+
     init {
         setupAnimator()
     }
 
-    /**
-     * Initializes and configures the ValueAnimator for continuous wave animation.
-     * Creates a time-based animator that runs indefinitely and updates wave offsets
-     * for all 10 layers based on system time.
-     *
-     * @author lorenzus-jpeg
-     * @since v11
-     */
     private fun setupAnimator() {
         animator = ValueAnimator.ofFloat(0f, Float.MAX_VALUE).apply {
             duration = Long.MAX_VALUE
@@ -53,45 +51,53 @@ class AnimatedBackgroundView @JvmOverloads constructor(
         }
     }
 
-    /**
-     * Called when the view size changes. Currently a placeholder override.
-     *
-     * @param w Current width of the view
-     * @param h Current height of the view
-     * @param oldw Previous width of the view
-     * @param oldh Previous height of the view
-     *
-     * @author lorenzus-jpeg
-     * @since v11
-     */
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
+        if (bouncingDots.isEmpty()) {
+            initializeBouncingDots()
+        }
     }
 
-    /**
-     * Main drawing method that renders all animated wave layers.
-     * Delegates to drawWaves() for rendering.
-     *
-     * @param canvas The canvas to draw on
-     *
-     * @author lorenzus-jpeg
-     * @since v11
-     */
+    private fun initializeBouncingDots() {
+        val colors = listOf(
+            Color.parseColor("#00FF88"),
+            Color.parseColor("#00FFCC"),
+            Color.parseColor("#00FFFF"),
+            Color.parseColor("#00CCFF"),
+            Color.parseColor("#0088FF")
+        )
+
+        val velocities = listOf(
+            Pair(2.5f, 2f),
+            Pair(-2.8f, 1.5f),
+            Pair(2f, -2.5f),
+            Pair(-1.8f, -2.2f),
+            Pair(3f, 1.8f)
+        )
+
+        for (i in 0 until 5) {
+            val dot = BouncingDot(
+                x = (width / 2f) + (i * 40f - 80f),
+                y = (height / 2f) + (i * 30f - 60f),
+                velocityX = velocities[i].first,
+                velocityY = velocities[i].second,
+                color = colors[i]
+            )
+            bouncingDots.add(dot)
+        }
+    }
+
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         drawWaves(canvas)
     }
 
-    /**
-     * Draws all 10 wave layers with responsive amplitude scaling.
-     * Each layer has unique amplitude, frequency, and color values.
-     *
-     * @param canvas The canvas to draw the waves on
-     *
-     * @author lorenzus-jpeg
-     * @since v11
-     */
     private fun drawWaves(canvas: Canvas) {
+        if (waveMode == "bouncing") {
+            drawBouncingTrail(canvas)
+            return
+        }
+
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
         val amplitudeMultiplier = when {
             width >= 1200 -> 1.2f
@@ -122,20 +128,6 @@ class AnimatedBackgroundView @JvmOverloads constructor(
         }
     }
 
-    /**
-     * Draws a single wave layer with configurable wave mode (smooth, flat, or triangle).
-     *
-     * @param canvas The canvas to draw on
-     * @param paint Paint object for rendering
-     * @param layerIndex Index of the wave layer (1-10) for unique positioning
-     * @param baseAmplitude Base amplitude multiplier for the wave height
-     * @param frequency Wave frequency controlling the wave pattern density
-     * @param color ARGB color value for the wave layer
-     * @param isWhiteWave Whether this is the white wave with enhanced variability
-     *
-     * @author lorenzus-jpeg
-     * @since v11
-     */
     private fun drawWaveLayer(
         canvas: Canvas,
         paint: Paint,
@@ -195,21 +187,6 @@ class AnimatedBackgroundView @JvmOverloads constructor(
         canvas.drawPath(path, paint)
     }
 
-    /**
-     * Calculates Y coordinate for smooth wave mode.
-     * Combines multiple sine waves to create complex, non-repeating patterns.
-     *
-     * @param x Current X pixel position
-     * @param baseHeight Base height of the wave layer
-     * @param dynamicAmplitude Current amplitude of the wave
-     * @param frequency Wave frequency controlling pattern density
-     * @param timePhase Phase offset based on time and layer index
-     * @param isWhiteWave Whether this is the white wave with enhanced complexity
-     * @return Y coordinate for the current position
-     *
-     * @author lorenzus-jpeg
-     * @since v11
-     */
     private fun calculateSmoothWaveY(
         x: Int,
         baseHeight: Float,
@@ -235,20 +212,6 @@ class AnimatedBackgroundView @JvmOverloads constructor(
         return baseHeight - combinedAmplitude * peakHeightModifier
     }
 
-    /**
-     * Calculates Y coordinate for flat step mode.
-     * Creates discrete step-like changes that shift over time like a step chart.
-     *
-     * @param x Current X pixel position
-     * @param baseHeight Base height of the wave layer
-     * @param dynamicAmplitude Current amplitude of the wave
-     * @param currentTime Current time in seconds
-     * @param layerIndex Index of the current layer (1-10)
-     * @return Y coordinate for the current position
-     *
-     * @author lorenzus-jpeg
-     * @since v11
-     */
     private fun calculateFlatWaveY(
         x: Int,
         baseHeight: Float,
@@ -264,20 +227,6 @@ class AnimatedBackgroundView @JvmOverloads constructor(
         }
     }
 
-    /**
-     * Calculates Y coordinate for triangular wave mode.
-     * Creates sharp peaks and valleys with linear transitions between them.
-     *
-     * @param x Current X pixel position
-     * @param baseHeight Base height of the wave layer
-     * @param dynamicAmplitude Current amplitude of the wave
-     * @param frequency Wave frequency controlling pattern density
-     * @param timePhase Phase offset based on time and layer index
-     * @return Y coordinate for the current position
-     *
-     * @author lorenzus-jpeg
-     * @since v11
-     */
     private fun calculateTriangleWaveY(
         x: Int,
         baseHeight: Float,
@@ -289,54 +238,124 @@ class AnimatedBackgroundView @JvmOverloads constructor(
         return baseHeight - dynamicAmplitude * triangleWave
     }
 
-    /**
-     * Called when the view is attached to a window. Starts the wave animation.
-     *
-     * @author lorenzus-jpeg
-     * @since v11
-     */
+    private fun drawBouncingTrail(canvas: Canvas) {
+        val currentTime = System.currentTimeMillis()
+        val pointRadius = 8f
+        val maxTrailLength = 600
+
+        for (dot in bouncingDots) {
+            dot.x += dot.velocityX
+            dot.y += dot.velocityY
+
+            if (dot.x - pointRadius <= 0 || dot.x + pointRadius >= width) {
+                dot.velocityX *= -1
+                dot.x = dot.x.coerceIn(pointRadius, (width - pointRadius).toFloat())
+            }
+            if (dot.y - pointRadius <= 0 || dot.y + pointRadius >= height) {
+                dot.velocityY *= -1
+                dot.y = dot.y.coerceIn(pointRadius, (height - pointRadius).toFloat())
+            }
+
+            dot.trailPoints.add(Pair(dot.x, dot.y))
+            dot.trailTimestamps.add(currentTime)
+
+            while (dot.trailPoints.size > maxTrailLength) {
+                dot.trailPoints.removeAt(0)
+                dot.trailTimestamps.removeAt(0)
+            }
+        }
+
+        val trailPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            strokeCap = Paint.Cap.ROUND
+            strokeJoin = Paint.Join.ROUND
+        }
+
+        val trailColors = listOf(
+            Color.argb(15, 0, 255, 136),
+            Color.argb(30, 0, 220, 120),
+            Color.argb(60, 0, 180, 100),
+            Color.argb(100, 0, 150, 80),
+            Color.argb(150, 0, 255, 136)
+        )
+
+        for (dot in bouncingDots) {
+            for (i in 1 until dot.trailPoints.size) {
+                val prevPoint = dot.trailPoints[i - 1]
+                val currentPoint = dot.trailPoints[i]
+
+                val progress = i.toFloat() / dot.trailPoints.size
+                val colorIndex = (progress * (trailColors.size - 1)).toInt()
+                val nextColorIndex = minOf(colorIndex + 1, trailColors.size - 1)
+
+                val alphaMix = (progress * (trailColors.size - 1)) % 1f
+                val color1 = trailColors[colorIndex]
+                val color2 = trailColors[nextColorIndex]
+
+                val a1 = Color.alpha(color1)
+                val a2 = Color.alpha(color2)
+                val r1 = Color.red(color1)
+                val r2 = Color.red(color2)
+                val g1 = Color.green(color1)
+                val g2 = Color.green(color2)
+                val b1 = Color.blue(color1)
+                val b2 = Color.blue(color2)
+
+                val interpolatedColor = Color.argb(
+                    (a1 * (1 - alphaMix) + a2 * alphaMix).toInt(),
+                    (r1 * (1 - alphaMix) + r2 * alphaMix).toInt(),
+                    (g1 * (1 - alphaMix) + g2 * alphaMix).toInt(),
+                    (b1 * (1 - alphaMix) + b2 * alphaMix).toInt()
+                )
+
+                trailPaint.color = interpolatedColor
+                trailPaint.strokeWidth = 3f + (progress * 5f)
+
+                canvas.drawLine(prevPoint.first, prevPoint.second, currentPoint.first, currentPoint.second, trailPaint)
+            }
+        }
+
+        val glowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.FILL
+        }
+
+        val pointPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.FILL
+        }
+
+        val corePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE
+            style = Paint.Style.FILL
+        }
+
+        for (dot in bouncingDots) {
+            val glowRadius = pointRadius * 2.5f
+            glowPaint.color = Color.argb(40, Color.red(dot.color), Color.green(dot.color), Color.blue(dot.color))
+            canvas.drawCircle(dot.x, dot.y, glowRadius, glowPaint)
+
+            pointPaint.color = dot.color
+            canvas.drawCircle(dot.x, dot.y, pointRadius, pointPaint)
+
+            canvas.drawCircle(dot.x, dot.y, pointRadius * 0.5f, corePaint)
+        }
+    }
+
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         animator?.start()
     }
 
-    /**
-     * Called when the view is detached from a window. Stops the animation
-     * to prevent memory leaks and unnecessary processing.
-     *
-     * @author lorenzus-jpeg
-     * @since v11
-     */
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
         animator?.cancel()
     }
 
-    /**
-     * Called when the view's visibility changes. Manages animation lifecycle
-     * based on visibility to optimize performance.
-     *
-     * @param changedView The view whose visibility changed
-     * @param visibility New visibility state (VISIBLE, INVISIBLE, or GONE)
-     *
-     * @author lorenzus-jpeg
-     * @since v11
-     */
     override fun onVisibilityChanged(changedView: View, visibility: Int) {
         super.onVisibilityChanged(changedView, visibility)
         if (visibility == VISIBLE) animator?.start()
         else animator?.cancel()
     }
 
-    /**
-     * Sets the wave mode (smooth, flat, or triangular).
-     * Updates will be applied on the next frame.
-     *
-     * @param mode Wave mode: "wave" (smooth), "flat" (steps), or "triangle" (triangular)
-     *
-     * @author lorenzus-jpeg
-     * @since v11
-     */
     fun setWaveMode(mode: String) {
         waveMode = mode
         invalidate()
