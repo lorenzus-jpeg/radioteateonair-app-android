@@ -51,8 +51,8 @@ class ProgramsModal(private val context: Context) {
 
         val closeButton = ImageView(context).apply {
             setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
-            layoutParams = LinearLayout.LayoutParams(48, 48)
-            setPadding(8, 8, 8, 8)
+            layoutParams = LinearLayout.LayoutParams(64, 64)
+            setPadding(4, 4, 4, 4)
             setColorFilter(Color.BLACK)
             background = createRippleDrawable()
             setOnClickListener { dialog.dismiss() }

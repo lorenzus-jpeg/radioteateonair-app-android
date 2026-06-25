@@ -2,6 +2,13 @@
 
 Tutte le modifiche importanti a questo progetto saranno documentate in questo file.
 
+## [TOA-13] - 2026-06-25
+
+### Fixed
+- Dimensione del bottone di chiusura modale aumentato.
+
+---
+
 ## [TOA-12] - 2025-11-27
 
 ### Added
