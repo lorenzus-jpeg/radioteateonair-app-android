@@ -5,14 +5,14 @@ plugins {
 
 android {
     namespace = "it.teateonair.app"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "it.teateonair.app"
-        minSdk = 29
-        targetSdk = 35
-        versionCode = 15
-        versionName = "v1.6.0_TOA-13"
+        minSdk = 33
+        targetSdk = 36
+        versionCode = 16
+        versionName = "v1.6.0_TOA-14"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
